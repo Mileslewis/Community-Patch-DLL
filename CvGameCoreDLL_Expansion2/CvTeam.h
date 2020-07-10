@@ -110,17 +110,17 @@ public:
 	bool IsMinorCivWarmonger() const;
 
 	// Some diplo stuff
-	bool IsBrokenMilitaryPromise() const;
-	void SetBrokenMilitaryPromise(bool bValue);
-	bool IsBrokenExpansionPromise() const;
-	void SetBrokenExpansionPromise(bool bValue);
-	bool IsBrokenBorderPromise() const;
-	void SetBrokenBorderPromise(bool bValue);
-	bool IsBrokenCityStatePromise() const;
-	void SetBrokenCityStatePromise(bool bValue);
+	bool IsBrokenMilitaryPromise() const; // CANDIDATE FOR DELETION!
+	void SetBrokenMilitaryPromise(bool bValue); // CANDIDATE FOR DELETION!
+	bool IsBrokenExpansionPromise() const; // CANDIDATE FOR DELETION!
+	void SetBrokenExpansionPromise(bool bValue); // CANDIDATE FOR DELETION!
+	bool IsBrokenBorderPromise() const; // CANDIDATE FOR DELETION!
+	void SetBrokenBorderPromise(bool bValue); // CANDIDATE FOR DELETION!
+	bool IsBrokenCityStatePromise() const; // CANDIDATE FOR DELETION!
+	void SetBrokenCityStatePromise(bool bValue); // CANDIDATE FOR DELETION!
 #if defined(MOD_BALANCE_CORE)
-	bool IsCivilianKiller() const;
-	void SetCivilianKiller(bool bValue);
+	bool IsCivilianKiller() const; // CANDIDATE FOR DELETION!
+	void SetCivilianKiller(bool bValue); // CANDIDATE FOR DELETION!
 #endif
 
 	PlayerTypes getLeaderID() const;

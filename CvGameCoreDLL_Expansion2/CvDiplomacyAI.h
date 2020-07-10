@@ -2207,7 +2207,7 @@ private:
 	// (Memory of what we've talked about with people)
 	DeclarationLogData* m_paDeclarationsLog;
 	DiploLogData** m_ppaDiploStatementsLog;
-	short* m_paDiploLogStatementTurnCountScratchPad;
+	short* m_paDiploLogStatementTurnCountScratchPad; // CANDIDATE FOR DELETION!
 	bool** m_ppaabSentAttackMessageToMinorCivProtector;
 
 	// Opinion & Approach
@@ -2221,35 +2221,35 @@ private:
 	bool* m_pabWantToRouteToMinor;
 
 	// Planning Exchanges
-	short* m_paiDoFValue;
+	short* m_paiDoFValue; // RENAMING LIKELY
 	short* m_paiCompetitorValue;
 	short* m_paiDefensivePactValue;
-	bool* m_pabWantsDoFWithPlayer;
+	bool* m_pabWantsDoFWithPlayer; // RENAMING LIKELY
 	bool* m_pabWantsDefensivePactWithPlayer;
 	bool* m_pabWantsResearchAgreementWithPlayer;
 
 	// Exchanges
-	bool* m_pabDoFAccepted;
+	bool* m_pabDoFAccepted; // CANDIDATE FOR DELETION!
 	short* m_paiDoFCounter;
-	char* m_paeDoFType;
-	bool* m_pabDenouncedPlayer;
+	char* m_paeDoFType; // RENAMING LIKELY
+	bool* m_pabDenouncedPlayer; // CANDIDATE FOR DELETION!
 	short* m_paiDenouncedPlayerCounter;
 	bool* m_pabCantMatchDeal;
 	int* m_paiDemandEverMade;
-	short* m_paiDemandMadeTurn;
-	short* m_paiDemandCounter;
-	short* m_paiDemandTooSoonNumTurns;
+	short* m_paiDemandMadeTurn; // CANDIDATE FOR DELETION!
+	short* m_paiDemandCounter; // CANDIDATE FOR DELETION!
+	short* m_paiDemandTooSoonNumTurns; // CANDIDATE FOR DELETION!
 	short* m_paiTradeValue;
 	short* m_paiAssistValue;
 	short* m_paiCommonFoeValue;
 
 	// Coop Wars
-	char** m_ppaacCoopWarAcceptedState;
-	short** m_ppaaiCoopWarCounter;
-	short* m_paiNumTimesCoopWarDenied;
+	char** m_ppaacCoopWarAcceptedState; // RENAMING LIKELY
+	short** m_ppaaiCoopWarCounter; // RENAMING LIKELY
+	short* m_paiNumTimesCoopWarDenied; // RENAMING LIKELY
 
 	// War
-	bool* m_pabWantsSneakAttack;
+	bool* m_pabWantsSneakAttack; // RENAMING LIKELY
 	bool* m_pabArmyInPlaceForAttack;
 	short* m_paiPlayerNumTurnsAtWar;
 	short* m_paiPlayerNumTurnsSinceCityCapture;
@@ -2279,7 +2279,7 @@ private:
 	short* m_paiFriendDenouncedUsTurn;
 	bool* m_pabFriendDeclaredWarOnUs; // CANDIDATE FOR DELETION!
 	short* m_paiFriendDeclaredWarOnUsTurn;
-	short* m_paiPlayerBackstabCounter;
+	short* m_paiPlayerBackstabCounter; // CANDIDATE FOR DELETION!
 
 	// Warmongering Penalties
 	char* m_paiOtherPlayerNumMinorsAttacked;
@@ -2295,37 +2295,37 @@ private:
 	char* m_paePlotBuyingAggressivePosture;
 
 	// Dispute Levels
-	char* m_paePlayerLandDisputeLevel;
-	char* m_paePlayerLastTurnLandDisputeLevel;
-	char* m_paePlayerVictoryDisputeLevel;
-	char* m_paePlayerVictoryBlockLevel;
-	char* m_paePlayerWonderDisputeLevel;
-	char* m_paePlayerMinorCivDisputeLevel;
+	char* m_paePlayerLandDisputeLevel; // RENAMING LIKELY
+	char* m_paePlayerLastTurnLandDisputeLevel; // RENAMING LIKELY
+	char* m_paePlayerVictoryDisputeLevel; // RENAMING LIKELY
+	char* m_paePlayerVictoryBlockLevel; // RENAMING LIKELY
+	char* m_paePlayerWonderDisputeLevel; // RENAMING LIKELY
+	char* m_paePlayerMinorCivDisputeLevel; // RENAMING LIKELY
 
 	// Threat Levels
 	char* m_paeMilitaryThreat;
 	char* m_paeWarmongerThreat;
 
 	// Strength Assessments
-	char* m_paePlayerMilitaryStrengthComparedToUs;
-	char* m_paePlayerEconomicStrengthComparedToUs;
-	char* m_paePlayerTargetValue;
+	char* m_paePlayerMilitaryStrengthComparedToUs; // RENAMING LIKELY
+	char* m_paePlayerEconomicStrengthComparedToUs; // RENAMING LIKELY
+	char* m_paePlayerTargetValue; // RENAMING LIKELY
 	bool* m_pabEasyTarget;
 
 	// PROMISES
 	// Military Promise
 	bool* m_pabPlayerMadeMilitaryPromise; // CANDIDATE FOR DELETION!
-	bool* m_pabPlayerBrokenMilitaryPromise;
-	bool* m_pabPlayerIgnoredMilitaryPromise;
+	bool* m_pabPlayerBrokenMilitaryPromise; // RENAMING LIKELY
+	bool* m_pabPlayerIgnoredMilitaryPromise; // RENAMING LIKELY
 	short* m_paiPlayerMilitaryPromiseCounter; // CANDIDATE FOR DELETION!
 	short* m_paiBrokenMilitaryPromiseTurn;
 
 	// Expansion Promise
 	bool* m_pabPlayerNoSettleRequestAccepted; // CANDIDATE FOR DELETION!
 	short* m_paiPlayerNoSettleRequestCounter; // CANDIDATE FOR DELETION!
-	short* m_paiPlayerMadeExpansionPromiseTurn;
-	bool* m_pabPlayerBrokenExpansionPromise;
-	bool* m_pabPlayerIgnoredExpansionPromise;
+	short* m_paiPlayerMadeExpansionPromiseTurn; // RENAMING LIKELY
+	bool* m_pabPlayerBrokenExpansionPromise; // RENAMING LIKELY
+	bool* m_pabPlayerIgnoredExpansionPromise; // RENAMING LIKELY
 	char* m_paePlayerExpansionPromiseData; // CANDIDATE FOR DELETION!
 	pair<int,int>* m_paNoExpansionPromise; // CANDIDATE FOR DELETION!
 	pair<int,int>* m_paLastTurnEmpireDistance; // CANDIDATE FOR DELETION!
@@ -2335,78 +2335,78 @@ private:
 	bool* m_pabPlayerNoSettleRequestEverAsked; // CANDIDATE FOR DELETION!
 
 	// Border Promise
-	short* m_paiPlayerMadeBorderPromiseTurn;
-	bool* m_pabPlayerBrokenBorderPromise;
-	bool* m_pabPlayerIgnoredBorderPromise;
-	char* m_paePlayerBorderPromiseData;
+	short* m_paiPlayerMadeBorderPromiseTurn; // RENAMING LIKELY
+	bool* m_pabPlayerBrokenBorderPromise; // RENAMING LIKELY
+	bool* m_pabPlayerIgnoredBorderPromise; // RENAMING LIKELY
+	char* m_paePlayerBorderPromiseData; // RENAMING LIKELY
 	short* m_paiBrokenBorderPromiseValue; // CANDIDATE FOR DELETION!
 	short* m_paiIgnoredBorderPromiseValue; // CANDIDATE FOR DELETION!
 	bool* m_pabPlayerEverMadeBorderPromise; // CANDIDATE FOR DELETION!
 
 	// Bully City-State Promise
-	bool* m_pabPlayerMadeBullyCityStatePromise;
-	bool* m_pabPlayerBrokenBullyCityStatePromise;
-	bool* m_pabPlayerIgnoredBullyCityStatePromise;
+	bool* m_pabPlayerMadeBullyCityStatePromise; // RENAMING LIKELY
+	bool* m_pabPlayerBrokenBullyCityStatePromise; // RENAMING LIKELY
+	bool* m_pabPlayerIgnoredBullyCityStatePromise; // RENAMING LIKELY
 
 	// Attack City-State Promise
-	bool* m_pabPlayerMadeAttackCityStatePromise;
+	bool* m_pabPlayerMadeAttackCityStatePromise; // RENAMING LIKELY
 	bool* m_pabPlayerBrokenAttackCityStatePromise; // CANDIDATE FOR DELETION!
-	bool* m_pabPlayerIgnoredAttackCityStatePromise;
+	bool* m_pabPlayerIgnoredAttackCityStatePromise; // RENAMING LIKELY
 	short* m_paiBrokenAttackCityStatePromiseTurn;
 
 	// Spy Promise
 	bool* m_pabPlayerStopSpyingRequestAccepted; // CANDIDATE FOR DELETION!
 	short* m_paiPlayerStopSpyingRequestCounter; // CANDIDATE FOR DELETION!
-	bool* m_pabPlayerMadeSpyPromise;
-	bool* m_pabPlayerBrokenSpyPromise;
-	bool* m_pabPlayerIgnoredSpyPromise;
+	bool* m_pabPlayerMadeSpyPromise; // RENAMING LIKELY
+	bool* m_pabPlayerBrokenSpyPromise; // RENAMING LIKELY
+	bool* m_pabPlayerIgnoredSpyPromise; // RENAMING LIKELY
 	bool* m_pabPlayerStopSpyingRequestEverAsked; // CANDIDATE FOR DELETION!
 
 	// Religious Conversion Promise
-	bool* m_pabPlayerAskedNotToConvert;
-	bool* m_pabPlayerAgreedNotToConvert;
-	bool* m_pabPlayerMadeNoConvertPromise;
-	bool* m_pabPlayerBrokenNoConvertPromise;
-	bool* m_pabPlayerIgnoredNoConvertPromise;
+	bool* m_pabPlayerAskedNotToConvert; // RENAMING LIKELY
+	bool* m_pabPlayerAgreedNotToConvert; // RENAMING LIKELY
+	bool* m_pabPlayerMadeNoConvertPromise; // RENAMING LIKELY
+	bool* m_pabPlayerBrokenNoConvertPromise; // RENAMING LIKELY
+	bool* m_pabPlayerIgnoredNoConvertPromise; // RENAMING LIKELY
 	bool* m_pabEverConvertedCity;
 
 	// Digging Promise
-	bool* m_pabPlayerAskedNotToDig;
-	bool* m_pabPlayerAgreedNotToDig;
-	bool* m_pabPlayerMadeNoDiggingPromise;
-	bool* m_pabPlayerBrokenNoDiggingPromise;
-	bool* m_pabPlayerIgnoredNoDiggingPromise;
+	bool* m_pabPlayerAskedNotToDig; // RENAMING LIKELY
+	bool* m_pabPlayerAgreedNotToDig; // RENAMING LIKELY
+	bool* m_pabPlayerMadeNoDiggingPromise; // RENAMING LIKELY
+	bool* m_pabPlayerBrokenNoDiggingPromise; // RENAMING LIKELY
+	bool* m_pabPlayerIgnoredNoDiggingPromise; // RENAMING LIKELY
 
 	// Coop War Promise
-	bool* m_pabPlayerBrokenCoopWarPromise;
+	bool* m_pabPlayerBrokenCoopWarPromise; // RENAMING LIKELY
 
 	// OTHER DIPLOMATIC VALUES
 	// Event flags
 	bool* m_pabPlayerForgaveForSpying; // CANDIDATE FOR DELETION!
-	bool* m_pabPlayerLiberatedCapital;
+	bool* m_pabPlayerLiberatedCapital; // RENAMING LIKELY
 	bool* m_pabDoFEverAsked;
-	bool* m_pabPlayerCapturedCapital;
-	bool* m_pabPlayerCapturedHolyCity;
+	bool* m_pabPlayerCapturedCapital; // RENAMING LIKELY
+	bool* m_pabPlayerCapturedHolyCity; // RENAMING LIKELY
 
 	// # of times/points counters
 	short* m_paiNumCitiesLiberated;
 	short* m_paiNumCiviliansReturnedToMe;
 	short* m_paiNumTimesIntrigueSharedBy;
 	short* m_paiNumLandmarksBuiltForMe;
-	char* m_paiTheyPlottedAgainstUs;
+	char* m_paiTheyPlottedAgainstUs; // RENAMING LIKELY
 	short* m_paiNumTimesRazed;
 	short* m_paiNumTradeRoutesPlundered;
 	short* m_paiNumWondersBeatenTo;
-	short* m_paiNumTimesCultureBombed;
-	char* m_paiTheyLoweredOurInfluence;
-	char* m_paiOtherPlayerNumProtectedMinorsBullied;
-	char* m_paiOtherPlayerNumProtectedMinorsAttacked;
-	char* m_paiOtherPlayerNumProtectedMinorsKilled;
+	short* m_paiNumTimesCultureBombed; // RENAMING LIKELY
+	char* m_paiTheyLoweredOurInfluence; // RENAMING LIKELY
+	char* m_paiOtherPlayerNumProtectedMinorsBullied; // RENAMING LIKELY
+	char* m_paiOtherPlayerNumProtectedMinorsAttacked; // RENAMING LIKELY
+	char* m_paiOtherPlayerNumProtectedMinorsKilled; // RENAMING LIKELY
 	short* m_paiNegativeReligiousConversionPoints;
 	short* m_paiNumTimesRobbedBy;
-	char* m_paiPerformedCoupAgainstUs;
+	char* m_paiPerformedCoupAgainstUs; // RENAMING LIKELY
 	short* m_paiNegativeArchaeologyPoints;
-	int* m_paiArtifactsEverDugUp;
+	int* m_paiArtifactsEverDugUp; // RENAMING LIKELY
 	short* m_paiNumTimesNuked;
 
 	// Turn counters
@@ -2415,20 +2415,20 @@ private:
 	short* m_paiCiviliansReturnedToMeTurn;
 	short* m_paiIntrigueSharedTurn;
 	short* m_paiPlayerForgaveForSpyingTurn;
-	short* m_paiNumLandmarksBuiltForMeTurn;
+	short* m_paiNumLandmarksBuiltForMeTurn; // RENAMING LIKELY
 	short* m_paiPlottedAgainstUsTurn;
 	short* m_paiPlunderedTradeRouteTurn;
-	short* m_paiOtherPlayerTurnsSinceSidedWithTheirProtectedMinor;
-	short* m_paiOtherPlayerTurnsSinceAttackedProtectedMinor;
-	short* m_paiOtherPlayerTurnsSinceKilledProtectedMinor;
+	short* m_paiOtherPlayerTurnsSinceSidedWithTheirProtectedMinor; // RENAMING LIKELY
+	short* m_paiOtherPlayerTurnsSinceAttackedProtectedMinor; // RENAMING LIKELY
+	short* m_paiOtherPlayerTurnsSinceKilledProtectedMinor; // RENAMING LIKELY
 	short* m_paiReligiousConversionTurn;
-	short* m_paiTimesRobbedTurn;
+	short* m_paiTimesRobbedTurn; // RENAMING LIKELY
 	short* m_paiPerformedCoupTurn;
-	short* m_paiOtherPlayerTurnsSinceWeLikedTheirProposal;
-	short* m_paiOtherPlayerTurnsSinceWeDislikedTheirProposal;
-	short* m_paiOtherPlayerTurnsSinceTheySupportedOurProposal;
-	short* m_paiOtherPlayerTurnsSinceTheyFoiledOurProposal;
-	short* m_paiOtherPlayerTurnsSinceTheySupportedOurHosting;
+	short* m_paiOtherPlayerTurnsSinceWeLikedTheirProposal; // RENAMING LIKELY
+	short* m_paiOtherPlayerTurnsSinceWeDislikedTheirProposal; // RENAMING LIKELY
+	short* m_paiOtherPlayerTurnsSinceTheySupportedOurProposal; // RENAMING LIKELY
+	short* m_paiOtherPlayerTurnsSinceTheyFoiledOurProposal; // RENAMING LIKELY
+	short* m_paiOtherPlayerTurnsSinceTheySupportedOurHosting; // RENAMING LIKELY
 
 	// Player-specific memory
 	char* m_paiOtherPlayerProtectedMinorAttacked; // CANDIDATE FOR DELETION!
@@ -2445,7 +2445,7 @@ private:
 	char** m_ppaaeOtherPlayerMajorCivApproach;
 	short** m_ppaaiOtherPlayerMajorCivApproachCounter;
 	int** m_ppaaiOtherPlayerWarValueLost;
-	int** m_ppaaiOtherPlayerLastRoundWarValueLost;
+	int** m_ppaaiOtherPlayerLastRoundWarValueLost; // CANDIDATE FOR DELETION!
 	char** m_ppaaeOtherPlayerWarDamageLevel;
 	char** m_ppaaeOtherPlayerMilitaryThreat;
 	char** m_ppaaeOtherPlayerLandDisputeLevel;
@@ -2462,13 +2462,13 @@ private:
 	bool* m_pabHelpRequestEverMade;
 	short* m_paiHelpRequestCounter; // CANDIDATE FOR DELETION!
 	short* m_paiHelpRequestTooSoonNumTurns; // CANDIDATE FOR DELETION!
-	bool* m_pabDemandAcceptedWhenVassal;
+	bool* m_pabDemandAcceptedWhenVassal; // RENAMING LIKELY
 	short* m_paiNumTimesDemandedWhenVassal; // CANDIDATE FOR DELETION!
-	short* m_paiPlayerVassalageProtectValue;
-	short* m_paiPlayerVassalageFailedProtectValue;
+	short* m_paiPlayerVassalageProtectValue; // RENAMING LIKELY
+	short* m_paiPlayerVassalageFailedProtectValue; // RENAMING LIKELY
 	bool* m_pabMasterLiberatedMeFromVassalage;
-	short* m_paiPlayerVassalageTurnsSincePeacefullyRevokedVassalage;
-	short* m_paiPlayerVassalageTurnsSinceForcefullyRevokedVassalage;
+	short* m_paiPlayerVassalageTurnsSincePeacefullyRevokedVassalage; // RENAMING LIKELY
+	short* m_paiPlayerVassalageTurnsSinceForcefullyRevokedVassalage; // RENAMING LIKELY
 	bool* m_pabPlayerBrokenVassalAgreement; // CANDIDATE FOR DELETION!
 	short* m_paiBrokenVassalAgreementTurn;
 	bool* m_pabVassalTaxRaised;
