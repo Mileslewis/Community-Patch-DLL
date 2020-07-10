@@ -61,8 +61,8 @@ public:
 
 	int GetTurnMadePeaceTreatyWithTeam(TeamTypes eTeam) const;
 	void SetTurnMadePeaceTreatyWithTeam(TeamTypes eTeam, int iNewValue);
-	bool IsHasBrokenPeaceTreaty() const;
-	void SetHasBrokenPeaceTreaty(bool bValue);
+	bool IsHasBrokenPeaceTreaty() const; // CANDIDATE FOR DELETION!
+	void SetHasBrokenPeaceTreaty(bool bValue); // CANDIDATE FOR DELETION!
 
 	void meet(TeamTypes eTeam, bool bSuppressMessages);
 
