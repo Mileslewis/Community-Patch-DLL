@@ -2273,13 +2273,12 @@ private:
 	// Backstabbing Penalties
 	bool* m_pabUntrustworthyFriend;
 	bool* m_pabEverBackstabbedBy;
-	bool* m_pabDoFBroken;
+	bool* m_pabDoFBroken; // CANDIDATE FOR DELETION!
 	short* m_paiDoFBrokenTurn;	
-	bool* m_pabFriendDenouncedUs;
+	bool* m_pabFriendDenouncedUs; // CANDIDATE FOR DELETION!
 	short* m_paiFriendDenouncedUsTurn;
-	bool* m_pabFriendDeclaredWarOnUs;
+	bool* m_pabFriendDeclaredWarOnUs; // CANDIDATE FOR DELETION!
 	short* m_paiFriendDeclaredWarOnUsTurn;
-	short* m_paiDeclaredWarOnFriendValue;
 	short* m_paiPlayerBackstabCounter;
 
 	// Warmongering Penalties
@@ -2315,34 +2314,34 @@ private:
 
 	// PROMISES
 	// Military Promise
-	bool* m_pabPlayerMadeMilitaryPromise;
+	bool* m_pabPlayerMadeMilitaryPromise; // CANDIDATE FOR DELETION!
 	bool* m_pabPlayerBrokenMilitaryPromise;
 	bool* m_pabPlayerIgnoredMilitaryPromise;
-	short* m_paiPlayerMilitaryPromiseCounter;
+	short* m_paiPlayerMilitaryPromiseCounter; // CANDIDATE FOR DELETION!
 	short* m_paiBrokenMilitaryPromiseTurn;
 
 	// Expansion Promise
-	bool* m_pabPlayerNoSettleRequestAccepted;
-	short* m_paiPlayerNoSettleRequestCounter;
+	bool* m_pabPlayerNoSettleRequestAccepted; // CANDIDATE FOR DELETION!
+	short* m_paiPlayerNoSettleRequestCounter; // CANDIDATE FOR DELETION!
 	short* m_paiPlayerMadeExpansionPromiseTurn;
 	bool* m_pabPlayerBrokenExpansionPromise;
 	bool* m_pabPlayerIgnoredExpansionPromise;
-	char* m_paePlayerExpansionPromiseData;
-	pair<int,int>* m_paNoExpansionPromise;
-	pair<int,int>* m_paLastTurnEmpireDistance;
-	short* m_paiBrokenExpansionPromiseValue;
-	short* m_paiIgnoredExpansionPromiseValue;
-	bool* m_pabPlayerEverMadeExpansionPromise;
-	bool* m_pabPlayerNoSettleRequestEverAsked;
+	char* m_paePlayerExpansionPromiseData; // CANDIDATE FOR DELETION!
+	pair<int,int>* m_paNoExpansionPromise; // CANDIDATE FOR DELETION!
+	pair<int,int>* m_paLastTurnEmpireDistance; // CANDIDATE FOR DELETION!
+	short* m_paiBrokenExpansionPromiseValue; // CANDIDATE FOR DELETION!
+	short* m_paiIgnoredExpansionPromiseValue; // CANDIDATE FOR DELETION!
+	bool* m_pabPlayerEverMadeExpansionPromise; // CANDIDATE FOR DELETION!
+	bool* m_pabPlayerNoSettleRequestEverAsked; // CANDIDATE FOR DELETION!
 
 	// Border Promise
 	short* m_paiPlayerMadeBorderPromiseTurn;
 	bool* m_pabPlayerBrokenBorderPromise;
 	bool* m_pabPlayerIgnoredBorderPromise;
 	char* m_paePlayerBorderPromiseData;
-	short* m_paiBrokenBorderPromiseValue;
-	short* m_paiIgnoredBorderPromiseValue;
-	bool* m_pabPlayerEverMadeBorderPromise;
+	short* m_paiBrokenBorderPromiseValue; // CANDIDATE FOR DELETION!
+	short* m_paiIgnoredBorderPromiseValue; // CANDIDATE FOR DELETION!
+	bool* m_pabPlayerEverMadeBorderPromise; // CANDIDATE FOR DELETION!
 
 	// Bully City-State Promise
 	bool* m_pabPlayerMadeBullyCityStatePromise;
@@ -2351,17 +2350,17 @@ private:
 
 	// Attack City-State Promise
 	bool* m_pabPlayerMadeAttackCityStatePromise;
-	bool* m_pabPlayerBrokenAttackCityStatePromise;
+	bool* m_pabPlayerBrokenAttackCityStatePromise; // CANDIDATE FOR DELETION!
 	bool* m_pabPlayerIgnoredAttackCityStatePromise;
 	short* m_paiBrokenAttackCityStatePromiseTurn;
 
 	// Spy Promise
-	bool* m_pabPlayerStopSpyingRequestAccepted;
-	short* m_paiPlayerStopSpyingRequestCounter;
+	bool* m_pabPlayerStopSpyingRequestAccepted; // CANDIDATE FOR DELETION!
+	short* m_paiPlayerStopSpyingRequestCounter; // CANDIDATE FOR DELETION!
 	bool* m_pabPlayerMadeSpyPromise;
 	bool* m_pabPlayerBrokenSpyPromise;
 	bool* m_pabPlayerIgnoredSpyPromise;
-	bool* m_pabPlayerStopSpyingRequestEverAsked;
+	bool* m_pabPlayerStopSpyingRequestEverAsked; // CANDIDATE FOR DELETION!
 
 	// Religious Conversion Promise
 	bool* m_pabPlayerAskedNotToConvert;
@@ -2383,7 +2382,7 @@ private:
 
 	// OTHER DIPLOMATIC VALUES
 	// Event flags
-	bool* m_pabPlayerForgaveForSpying;
+	bool* m_pabPlayerForgaveForSpying; // CANDIDATE FOR DELETION!
 	bool* m_pabPlayerLiberatedCapital;
 	bool* m_pabDoFEverAsked;
 	bool* m_pabPlayerCapturedCapital;
@@ -2432,8 +2431,8 @@ private:
 	short* m_paiOtherPlayerTurnsSinceTheySupportedOurHosting;
 
 	// Player-specific memory
-	char* m_paiOtherPlayerProtectedMinorAttacked;
-	char* m_paiOtherPlayerProtectedMinorKilled;
+	char* m_paiOtherPlayerProtectedMinorAttacked; // CANDIDATE FOR DELETION!
+	char* m_paiOtherPlayerProtectedMinorKilled; // CANDIDATE FOR DELETION!
 
 	// GUESSES
 	// Guesses about other players' feelings towards us
@@ -2454,28 +2453,28 @@ private:
 
 #if defined(MOD_DIPLOMACY_CIV4_FEATURES)
 	// C4DF Values
-	bool* m_pabShareOpinionAccepted;
-	short* m_paiShareOpinionCounter;
-	bool* m_pabMoveTroopsRequestAccepted;
-	short* m_paiMoveTroopsRequestCounter;
+	bool* m_pabShareOpinionAccepted; // CANDIDATE FOR DELETION!
+	short* m_paiShareOpinionCounter; // CANDIDATE FOR DELETION!
+	bool* m_pabMoveTroopsRequestAccepted; // CANDIDATE FOR DELETION!
+	short* m_paiMoveTroopsRequestCounter; // CANDIDATE FOR DELETION!
 	bool* m_pabOfferingGift;
 	bool* m_pabOfferedGift;
 	bool* m_pabHelpRequestEverMade;
-	short* m_paiHelpRequestCounter;
-	short* m_paiHelpRequestTooSoonNumTurns;
+	short* m_paiHelpRequestCounter; // CANDIDATE FOR DELETION!
+	short* m_paiHelpRequestTooSoonNumTurns; // CANDIDATE FOR DELETION!
 	bool* m_pabDemandAcceptedWhenVassal;
-	short* m_paiNumTimesDemandedWhenVassal;
+	short* m_paiNumTimesDemandedWhenVassal; // CANDIDATE FOR DELETION!
 	short* m_paiPlayerVassalageProtectValue;
 	short* m_paiPlayerVassalageFailedProtectValue;
 	bool* m_pabMasterLiberatedMeFromVassalage;
 	short* m_paiPlayerVassalageTurnsSincePeacefullyRevokedVassalage;
 	short* m_paiPlayerVassalageTurnsSinceForcefullyRevokedVassalage;
-	bool* m_pabPlayerBrokenVassalAgreement;
+	bool* m_pabPlayerBrokenVassalAgreement; // CANDIDATE FOR DELETION!
 	short* m_paiBrokenVassalAgreementTurn;
 	bool* m_pabVassalTaxRaised;
 	bool* m_pabVassalTaxLowered;
-	int* m_paiVassalGoldPerTurnTaxedSinceVassalStarted;
-	int* m_paiVassalGoldPerTurnCollectedSinceVassalStarted;
+	int* m_paiVassalGoldPerTurnTaxedSinceVassalStarted; // CANDIDATE FOR DELETION!
+	int* m_paiVassalGoldPerTurnCollectedSinceVassalStarted; // CANDIDATE FOR DELETION!
 #endif
 
 	// Overall status across all other civs
@@ -2495,7 +2494,7 @@ private:
 #if defined(MOD_ACTIVE_DIPLOMACY)
 	DiplomacyPlayerType	m_eTargetPlayerType;
 #endif
-	// Data members for injecting test messages
+	// Data members for injecting test messages  // CANDIDATES FOR DELETION!
 	PlayerTypes			m_eTestToPlayer;
 	DiploStatementTypes m_eTestStatement;
 	int					m_iTestStatementArg1;
