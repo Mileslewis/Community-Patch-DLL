@@ -5061,8 +5061,7 @@ bool CvPlayerEspionage::AttemptCoup(uint uiSpyIndex)
 				{
 					// Don't apply the diplo penalty if this player hates the previous ally (or they're at war).
 					if (GET_PLAYER((PlayerTypes)ui).GetDiplomacyAI()->GetMajorCivOpinion(ePreviousAlly) != MAJOR_CIV_OPINION_UNFORGIVABLE &&
-						!GET_PLAYER((PlayerTypes)ui).GetDiplomacyAI()->WasEverBackstabbedBy(ePreviousAlly) &&
-						!GET_PLAYER((PlayerTypes)ui).GetDiplomacyAI()->WasTeammateEverBackstabbedBy(ePreviousAlly) &&
+						!GET_PLAYER((PlayerTypes)ui).GetDiplomacyAI()->WasOurTeamEverBackstabbedBy(ePreviousAlly) &&
 						!GET_TEAM(GET_PLAYER((PlayerTypes)ui).getTeam()).isAtWar(GET_PLAYER(ePreviousAlly).getTeam()))
 					{
 						GET_PLAYER((PlayerTypes)ui).GetDiplomacyAI()->ChangeNumTimesPerformedCoupAgainstUs(m_pPlayer->GetID(), 1);

@@ -33746,19 +33746,23 @@ bool CvPlayer::isMajorCiv() const
 }
 #endif
 
-#if defined(MOD_DIPLOMACY_CIV4_FEATURES)
 //	--------------------------------------------------------------------------------
 bool CvPlayer::IsVassalOfSomeone() const
 {
+#if defined(MOD_DIPLOMACY_CIV4_FEATURES)
 	return GET_TEAM(getTeam()).IsVassalOfSomeone();
+#endif
+	return false;
 }
 
 //	--------------------------------------------------------------------------------
 int CvPlayer::GetNumVassals() const
 {
+#if defined(MOD_DIPLOMACY_CIV4_FEATURES)
 	return GET_TEAM(getTeam()).GetNumVassals();
-}
 #endif
+	return false;
+}
 
 //	--------------------------------------------------------------------------------
 /// How many (valid) major civs has this player met?
