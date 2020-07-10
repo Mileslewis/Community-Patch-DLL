@@ -3951,7 +3951,7 @@ bool CvDiplomacyAI::HasSentAttackProtectedMinorTaunt(PlayerTypes ePlayer, Player
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
 	int iArrayIndex = (int)eMinor - MAX_MAJOR_CIVS;
 	if (iArrayIndex < 0 || iArrayIndex >= MAX_MINOR_CIVS) return false;
-	return (bool) m_ppaabSentAttackMessageToMinorCivProtector[(int)ePlayer][iArrayIndex];
+	return m_ppaabSentAttackMessageToMinorCivProtector[(int)ePlayer][iArrayIndex];
 }
 
 /// Set flag for whether we have sent a message to ePlayer about attacking their protected eMinor
@@ -4201,7 +4201,7 @@ bool CvDiplomacyAI::IsWantToRouteConnectToMinor(PlayerTypes eMinor)
 	// Remove the Majors from here, since we're only actually storing Data for the Minors
 	int iArrayIndex = (int)eMinor - MAX_MAJOR_CIVS;
 	if (iArrayIndex < 0 || iArrayIndex >= MAX_MINOR_CIVS) return false;
-	return (bool) m_pabWantToRouteToMinor[iArrayIndex];
+	return m_pabWantToRouteToMinor[iArrayIndex];
 }
 
 /// Sets if this AI want to connect to a minor with a route
@@ -4378,7 +4378,7 @@ PlayerTypes CvDiplomacyAI::GetMostValuableDefensivePact(bool bIgnoreDPs)
 bool CvDiplomacyAI::IsWantsDoFWithPlayer(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabWantsDoFWithPlayer[(int)ePlayer];
+	return m_pabWantsDoFWithPlayer[(int)ePlayer];
 }
 
 /// Sets if this AI wants to make a Declaration of Friendship with ePlayer
@@ -4418,7 +4418,7 @@ bool CvDiplomacyAI::IsWantsDefensivePactWithPlayer(PlayerTypes ePlayer) const
 	if (GetPlayer()->GetDiplomacyAI()->GetGlobalCoopWarAgainstState(ePlayer) == COOP_WAR_STATE_SOON)
 		return false;
 
-	return (bool) m_pabWantsDefensivePactWithPlayer[(int)ePlayer];
+	return m_pabWantsDefensivePactWithPlayer[(int)ePlayer];
 }
 
 /// Sets if this AI wants to make a Defensive Pact with ePlayer
@@ -4454,7 +4454,7 @@ int CvDiplomacyAI::GetNumDefensivePactsWanted(PlayerTypes eExcludedPlayer /* = N
 bool CvDiplomacyAI::IsWantsResearchAgreementWithPlayer(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabWantsResearchAgreementWithPlayer[(int)ePlayer];
+	return m_pabWantsResearchAgreementWithPlayer[(int)ePlayer];
 }
 
 /// Sets if this AI wants to make a Research Agreement with ePlayer
@@ -4521,7 +4521,7 @@ void CvDiplomacyAI::DoCancelWantsResearchAgreementWithPlayer(PlayerTypes ePlayer
 bool CvDiplomacyAI::IsDoFAccepted(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabDoFAccepted[(int)ePlayer];
+	return m_pabDoFAccepted[(int)ePlayer];
 }
 
 /// We made a Declaration of Friendship with someone, handle everything that means
@@ -4668,7 +4668,7 @@ int CvDiplomacyAI::GetNumDefensePacts() const
 bool CvDiplomacyAI::IsDenouncedPlayer(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabDenouncedPlayer[(int)ePlayer];
+	return m_pabDenouncedPlayer[(int)ePlayer];
 }
 
 /// Sets whether we've denounced ePlayer
@@ -5091,7 +5091,7 @@ void CvDiplomacyAI::ChangeNumTimesCoopWarDenied(PlayerTypes ePlayer, int iChange
 bool CvDiplomacyAI::IsWantsSneakAttack(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_CIV_PLAYERS) return false;
-	return (bool) m_pabWantsSneakAttack[(int)ePlayer];
+	return m_pabWantsSneakAttack[(int)ePlayer];
 }
 
 /// Sets if this AI wants to sneak attack ePlayer
@@ -5107,7 +5107,7 @@ void CvDiplomacyAI::SetWantsSneakAttack(PlayerTypes ePlayer, bool bValue)
 bool CvDiplomacyAI::IsArmyInPlaceForAttack(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_CIV_PLAYERS) return false;
-	return (bool) m_pabArmyInPlaceForAttack[(int)ePlayer];
+	return m_pabArmyInPlaceForAttack[(int)ePlayer];
 }
 
 /// Sets whether or not we're building up for an attack on ePlayer
@@ -5518,7 +5518,7 @@ bool CvDiplomacyAI::IsUntrustworthyFriend(PlayerTypes ePlayer) const
 	if (GET_PLAYER(ePlayer).IsVassalOfSomeone())
 		return false;
 	
-	return (bool) m_pabUntrustworthyFriend[(int)ePlayer];
+	return m_pabUntrustworthyFriend[(int)ePlayer];
 }
 
 /// Sets if we view this player as a backstabber
@@ -5634,7 +5634,7 @@ bool CvDiplomacyAI::IsDoFBroken(PlayerTypes ePlayer) const
 		return false;
 
 	// REVISE THIS: Fix duration.
-	return (bool) m_pabDoFBroken[(int)ePlayer];
+	return m_pabDoFBroken[(int)ePlayer];
 }
 
 /// Our Declaration of Friendship with ePlayer has been broken, handle everything that means
@@ -5730,7 +5730,7 @@ bool CvDiplomacyAI::IsFriendDenouncedUs(PlayerTypes ePlayer) const
 
 	// REVISE THIS: Duration!
 
-	return (bool) m_pabFriendDenouncedUs[(int)ePlayer];
+	return m_pabFriendDenouncedUs[(int)ePlayer];
 }
 
 /// Sets if this player denounced us while we had a DoF
@@ -5825,7 +5825,7 @@ bool CvDiplomacyAI::IsFriendDeclaredWarOnUs(PlayerTypes ePlayer) const
 
 	// REVISE THIS: Duration!
 
-	return (bool) m_pabFriendDeclaredWarOnUs[(int)ePlayer];
+	return m_pabFriendDeclaredWarOnUs[(int)ePlayer];
 }
 
 /// Sets if this player declared war on us while we had a DoF
@@ -6405,7 +6405,7 @@ bool CvDiplomacyAI::IsEasyTarget(PlayerTypes ePlayer) const
 	if (GetPlayer()->IsVassalOfSomeone() && !IsAtWar(ePlayer))
 		return false;
 
-	return (bool) m_pabEasyTarget[(int)ePlayer];
+	return m_pabEasyTarget[(int)ePlayer];
 }
 
 /// Sets whether or not this player is an easy attack target
@@ -6428,7 +6428,7 @@ void CvDiplomacyAI::SetEasyTarget(PlayerTypes ePlayer, bool bValue)
 bool CvDiplomacyAI::IsPlayerMadeMilitaryPromise(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerMadeMilitaryPromise[(int)ePlayer];
+	return m_pabPlayerMadeMilitaryPromise[(int)ePlayer];
 }
 
 /// Sets if ePlayer made a military promise to us
@@ -6453,7 +6453,7 @@ bool CvDiplomacyAI::IsPlayerBrokenMilitaryPromise(PlayerTypes ePlayer) const
 		return false;
 
 	// REVISE THIS: Duration!
-	return (bool) m_pabPlayerBrokenMilitaryPromise[(int)ePlayer];
+	return m_pabPlayerBrokenMilitaryPromise[(int)ePlayer];
 }
 
 /// Sets if ePlayer broke a military promise to us
@@ -6479,7 +6479,7 @@ void CvDiplomacyAI::SetPlayerBrokenMilitaryPromise(PlayerTypes ePlayer, bool bVa
 bool CvDiplomacyAI::IsPlayerIgnoredMilitaryPromise(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerIgnoredMilitaryPromise[(int)ePlayer];
+	return m_pabPlayerIgnoredMilitaryPromise[(int)ePlayer];
 }
 
 /// Sets if ePlayer ignored our request to make a military promise
@@ -6547,7 +6547,7 @@ void CvDiplomacyAI::SetBrokenMilitaryPromiseTurn(PlayerTypes ePlayer, int iValue
 bool CvDiplomacyAI::IsPlayerNoSettleRequestAccepted(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerNoSettleRequestAccepted[(int)ePlayer];
+	return m_pabPlayerNoSettleRequestAccepted[(int)ePlayer];
 }
 
 /// Marks plots as blocked or not blocked for this AI's settlers depending on if they agreed not to settle near ePlayer
@@ -6683,7 +6683,7 @@ int CvDiplomacyAI::GetPlayerMadeExpansionPromise(PlayerTypes ePlayer) const
 bool CvDiplomacyAI::IsPlayerBrokenExpansionPromise(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerBrokenExpansionPromise[(int)ePlayer];
+	return m_pabPlayerBrokenExpansionPromise[(int)ePlayer];
 }
 
 /// Sets if this player broke an expansion promise to us
@@ -6711,7 +6711,7 @@ void CvDiplomacyAI::SetPlayerBrokenExpansionPromise(PlayerTypes ePlayer, bool bV
 bool CvDiplomacyAI::IsPlayerIgnoredExpansionPromise(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerIgnoredExpansionPromise[(int)ePlayer];
+	return m_pabPlayerIgnoredExpansionPromise[(int)ePlayer];
 }
 
 /// Sets if this player ignored our request to make an expansion promise
@@ -6819,7 +6819,7 @@ void CvDiplomacyAI::ChangeIgnoredExpansionPromiseValue(PlayerTypes ePlayer, int 
 bool CvDiplomacyAI::EverMadeExpansionPromise(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerEverMadeExpansionPromise[(int)ePlayer];
+	return m_pabPlayerEverMadeExpansionPromise[(int)ePlayer];
 }
 
 /// Sets if this player ever made an expansion promise to us
@@ -6835,7 +6835,7 @@ void CvDiplomacyAI::SetEverMadeExpansionPromise(PlayerTypes ePlayer, bool bValue
 bool CvDiplomacyAI::IsPlayerNoSettleRequestEverAsked(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerNoSettleRequestEverAsked[(int)ePlayer];
+	return m_pabPlayerNoSettleRequestEverAsked[(int)ePlayer];
 }
 
 /// Sets if this player has ever requested that we not settle near their lands
@@ -6926,7 +6926,7 @@ int CvDiplomacyAI::GetPlayerMadeBorderPromise(PlayerTypes ePlayer)
 bool CvDiplomacyAI::IsPlayerBrokenBorderPromise(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerBrokenBorderPromise[ePlayer];
+	return m_pabPlayerBrokenBorderPromise[ePlayer];
 }
 
 /// Sets if this player broke a border promise to us
@@ -6942,7 +6942,7 @@ void CvDiplomacyAI::SetPlayerBrokenBorderPromise(PlayerTypes ePlayer, bool bValu
 bool CvDiplomacyAI::IsPlayerIgnoredBorderPromise(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerIgnoredBorderPromise[(int)ePlayer];
+	return m_pabPlayerIgnoredBorderPromise[(int)ePlayer];
 }
 
 /// Sets if this player ignored our request to make a border promise
@@ -7017,7 +7017,7 @@ void CvDiplomacyAI::ChangeIgnoredBorderPromiseValue(PlayerTypes ePlayer, int iCh
 bool CvDiplomacyAI::EverMadeBorderPromise(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerEverMadeBorderPromise[(int)ePlayer];
+	return m_pabPlayerEverMadeBorderPromise[(int)ePlayer];
 }
 
 /// Sets if this player ever made a border promise with us
@@ -7036,7 +7036,7 @@ void CvDiplomacyAI::SetEverMadeBorderPromise(PlayerTypes ePlayer, bool bValue)
 bool CvDiplomacyAI::IsPlayerMadeBullyCityStatePromise(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerMadeBullyCityStatePromise[(int)ePlayer];
+	return m_pabPlayerMadeBullyCityStatePromise[(int)ePlayer];
 }
 
 /// Sets if this player promised to stop bullying one of our protected Minors?
@@ -7052,7 +7052,7 @@ void CvDiplomacyAI::SetPlayerMadeBullyCityStatePromise(PlayerTypes ePlayer, bool
 bool CvDiplomacyAI::IsPlayerBrokenBullyCityStatePromise(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerBrokenBullyCityStatePromise[(int)ePlayer];
+	return m_pabPlayerBrokenBullyCityStatePromise[(int)ePlayer];
 }
 
 /// Sets if this player broke a promise to stop bullying one of our protected Minors
@@ -7068,7 +7068,7 @@ void CvDiplomacyAI::SetPlayerBrokenBullyCityStatePromise(PlayerTypes ePlayer, bo
 bool CvDiplomacyAI::IsPlayerIgnoredBullyCityStatePromise(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerIgnoredBullyCityStatePromise[(int)ePlayer];
+	return m_pabPlayerIgnoredBullyCityStatePromise[(int)ePlayer];
 }
 
 /// Sets if this player ignored our request to stop bullying one of our protected Minors
@@ -7088,7 +7088,7 @@ void CvDiplomacyAI::SetPlayerIgnoredBullyCityStatePromise(PlayerTypes ePlayer, b
 bool CvDiplomacyAI::IsPlayerMadeAttackCityStatePromise(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerMadeAttackCityStatePromise[(int)ePlayer];
+	return m_pabPlayerMadeAttackCityStatePromise[(int)ePlayer];
 }
 
 /// Sets if this player promised to stop attacking one of our protected Minors
@@ -7112,7 +7112,7 @@ bool CvDiplomacyAI::IsPlayerBrokenAttackCityStatePromise(PlayerTypes ePlayer) co
 	if (GetPlayer()->isHuman() && GET_PLAYER(ePlayer).isHuman())
 		return false;
 	
-	return (bool) m_pabPlayerBrokenAttackCityStatePromise[(int)ePlayer];
+	return m_pabPlayerBrokenAttackCityStatePromise[(int)ePlayer];
 }
 
 /// Sets if this player broke a promise to stop attacking one of our protected Minors
@@ -7138,7 +7138,7 @@ void CvDiplomacyAI::SetPlayerBrokenAttackCityStatePromise(PlayerTypes ePlayer, b
 bool CvDiplomacyAI::IsPlayerIgnoredAttackCityStatePromise(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerIgnoredAttackCityStatePromise[(int)ePlayer];
+	return m_pabPlayerIgnoredAttackCityStatePromise[(int)ePlayer];
 }
 
 /// Sets if this player ignored our request to stop attacking one of our protected Minors
@@ -7158,7 +7158,7 @@ void CvDiplomacyAI::SetPlayerIgnoredAttackCityStatePromise(PlayerTypes ePlayer, 
 bool CvDiplomacyAI::IsPlayerStopSpyingRequestAccepted(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerStopSpyingRequestAccepted[(int)ePlayer];
+	return m_pabPlayerStopSpyingRequestAccepted[(int)ePlayer];
 }
 
 /// Sets whether or not ePlayer's request not to spy on them has been accepted
@@ -7207,7 +7207,7 @@ bool CvDiplomacyAI::IsStopSpyingMessageTooSoon(PlayerTypes ePlayer) const
 bool CvDiplomacyAI::IsPlayerMadeSpyPromise(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerMadeSpyPromise[(int)ePlayer];
+	return m_pabPlayerMadeSpyPromise[(int)ePlayer];
 }
 
 /// Sets if this player promised to stop spying on us
@@ -7223,7 +7223,7 @@ void CvDiplomacyAI::SetPlayerMadeSpyPromise(PlayerTypes ePlayer, bool bValue)
 bool CvDiplomacyAI::IsPlayerBrokenSpyPromise(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerBrokenSpyPromise[(int)ePlayer];
+	return m_pabPlayerBrokenSpyPromise[(int)ePlayer];
 }
 
 /// Sets if this player broke a promise to stop spying on us
@@ -7252,7 +7252,7 @@ void CvDiplomacyAI::SetPlayerBrokenSpyPromise(PlayerTypes ePlayer, bool bValue)
 bool CvDiplomacyAI::IsPlayerIgnoredSpyPromise(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerIgnoredSpyPromise[(int)ePlayer];
+	return m_pabPlayerIgnoredSpyPromise[(int)ePlayer];
 }
 
 /// Sets if this player ignored our request to stop spying on us
@@ -7281,7 +7281,7 @@ void CvDiplomacyAI::SetPlayerIgnoredSpyPromise(PlayerTypes ePlayer, bool bValue)
 bool CvDiplomacyAI::IsPlayerStopSpyingRequestEverAsked(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerStopSpyingRequestEverAsked[(int)ePlayer];
+	return m_pabPlayerStopSpyingRequestEverAsked[(int)ePlayer];
 }
 
 /// Sets if this player has ever requested that we stop spying on them
@@ -7300,7 +7300,7 @@ void CvDiplomacyAI::SetPlayerStopSpyingRequestEverAsked(PlayerTypes ePlayer, boo
 bool CvDiplomacyAI::IsPlayerAskedNotToConvert(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerAskedNotToConvert[(int)ePlayer];
+	return m_pabPlayerAskedNotToConvert[(int)ePlayer];
 }
 
 /// Sets if ePlayer asked us to stop sending missionaries and prophets to their cities
@@ -7316,7 +7316,7 @@ void CvDiplomacyAI::SetPlayerAskedNotToConvert(PlayerTypes ePlayer, bool bValue)
 bool CvDiplomacyAI::IsPlayerAgreeNotToConvert(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerAgreedNotToConvert[(int)ePlayer];
+	return m_pabPlayerAgreedNotToConvert[(int)ePlayer];
 }
 
 /// Sets if we agreed to stop sending missionaries and prophets to ePlayer's cities
@@ -7332,7 +7332,7 @@ void CvDiplomacyAI::SetPlayerAgreeNotToConvert(PlayerTypes ePlayer, bool bValue)
 bool CvDiplomacyAI::IsPlayerMadeNoConvertPromise(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerMadeNoConvertPromise[(int)ePlayer];
+	return m_pabPlayerMadeNoConvertPromise[(int)ePlayer];
 }
 
 /// Sets if this player promised to stop converting our cities
@@ -7348,7 +7348,7 @@ void CvDiplomacyAI::SetPlayerMadeNoConvertPromise(PlayerTypes ePlayer, bool bVal
 bool CvDiplomacyAI::IsPlayerBrokenNoConvertPromise(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerBrokenNoConvertPromise[(int)ePlayer];
+	return m_pabPlayerBrokenNoConvertPromise[(int)ePlayer];
 }
 
 /// Sets if this player promised to stop converting our cities
@@ -7370,7 +7370,7 @@ void CvDiplomacyAI::SetPlayerBrokenNoConvertPromise(PlayerTypes ePlayer, bool bV
 bool CvDiplomacyAI::IsPlayerIgnoredNoConvertPromise(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerIgnoredNoConvertPromise[(int)ePlayer];
+	return m_pabPlayerIgnoredNoConvertPromise[(int)ePlayer];
 }
 
 /// Sets if this player ignored our request to stop converting our cities
@@ -7392,7 +7392,7 @@ void CvDiplomacyAI::SetPlayerIgnoredNoConvertPromise(PlayerTypes ePlayer, bool b
 bool CvDiplomacyAI::HasPlayerEverConvertedCity(PlayerTypes ePlayer) const
 {
 	if (ePlayer < 0 || ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabEverConvertedCity[(int)ePlayer];
+	return m_pabEverConvertedCity[(int)ePlayer];
 }
 
 /// Sets if this player has ever converted one of our cities (if we care)
@@ -7412,7 +7412,7 @@ void CvDiplomacyAI::SetPlayerEverConvertedCity(PlayerTypes ePlayer, bool bValue)
 bool CvDiplomacyAI::IsPlayerAskedNotToDig(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerAskedNotToDig[(int)ePlayer];
+	return m_pabPlayerAskedNotToDig[(int)ePlayer];
 }
 
 /// Sets if ePlayer asked us not to dig up their artifacts
@@ -7428,7 +7428,7 @@ void CvDiplomacyAI::SetPlayerAskedNotToDig(PlayerTypes ePlayer, bool bValue)
 bool CvDiplomacyAI::IsPlayerAgreeNotToDig(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerAgreedNotToDig[(int)ePlayer];
+	return m_pabPlayerAgreedNotToDig[(int)ePlayer];
 }
 
 /// Sets if we agreed to stop digging up ePlayer's artifacts
@@ -7444,7 +7444,7 @@ void CvDiplomacyAI::SetPlayerAgreeNotToDig(PlayerTypes ePlayer, bool bValue)
 bool CvDiplomacyAI::IsPlayerMadeNoDiggingPromise(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerMadeNoDiggingPromise[(int)ePlayer];
+	return m_pabPlayerMadeNoDiggingPromise[(int)ePlayer];
 }
 
 /// Sets if this player promised to stop digging up our artifacts
@@ -7460,7 +7460,7 @@ void CvDiplomacyAI::SetPlayerMadeNoDiggingPromise(PlayerTypes ePlayer, bool bVal
 bool CvDiplomacyAI::IsPlayerBrokenNoDiggingPromise(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerBrokenNoDiggingPromise[(int)ePlayer];
+	return m_pabPlayerBrokenNoDiggingPromise[(int)ePlayer];
 }
 
 /// Sets if this player promised to stop digging up our artifacts
@@ -7482,7 +7482,7 @@ void CvDiplomacyAI::SetPlayerBrokenNoDiggingPromise(PlayerTypes ePlayer, bool bV
 bool CvDiplomacyAI::IsPlayerIgnoredNoDiggingPromise(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerIgnoredNoDiggingPromise[(int)ePlayer];
+	return m_pabPlayerIgnoredNoDiggingPromise[(int)ePlayer];
 }
 
 /// Sets if this player ignored our request to stop digging up our artifacts
@@ -7508,7 +7508,7 @@ void CvDiplomacyAI::SetPlayerIgnoredNoDiggingPromise(PlayerTypes ePlayer, bool b
 bool CvDiplomacyAI::IsPlayerBrokenCoopWarPromise(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerBrokenCoopWarPromise[(int)ePlayer];
+	return m_pabPlayerBrokenCoopWarPromise[(int)ePlayer];
 }
 
 /// Sets if this player broke a coop war promise to us
@@ -7531,7 +7531,7 @@ void CvDiplomacyAI::SetPlayerBrokenCoopWarPromise(PlayerTypes ePlayer, bool bVal
 bool CvDiplomacyAI::IsPlayerForgaveForSpying(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerForgaveForSpying[(int)ePlayer];
+	return m_pabPlayerForgaveForSpying[(int)ePlayer];
 }
 
 /// Sets if this player forgave us for spying on them
@@ -7553,7 +7553,7 @@ bool CvDiplomacyAI::IsPlayerLiberatedCapital(PlayerTypes ePlayer) const
 		return false;
 	}
 	
-	return (bool) m_pabPlayerLiberatedCapital[(int)ePlayer];
+	return m_pabPlayerLiberatedCapital[(int)ePlayer];
 }
 
 /// Sets if ePlayer liberated our capital
@@ -7569,7 +7569,7 @@ void CvDiplomacyAI::SetPlayerLiberatedCapital(PlayerTypes ePlayer, bool bValue)
 bool CvDiplomacyAI::IsDoFEverAsked(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabDoFEverAsked[(int)ePlayer];
+	return m_pabDoFEverAsked[(int)ePlayer];
 }
 
 /// Sets if this player has ever asked to make a DoF with us
@@ -7585,7 +7585,7 @@ void CvDiplomacyAI::SetDoFEverAsked(PlayerTypes ePlayer, bool bValue)
 bool CvDiplomacyAI::IsPlayerCapturedCapital(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerCapturedCapital[(int)ePlayer];
+	return m_pabPlayerCapturedCapital[(int)ePlayer];
 }
 
 /// Sets if ePlayer captured our capital
@@ -7617,7 +7617,7 @@ bool CvDiplomacyAI::IsCapitalCapturedBy(PlayerTypes ePlayer) const
 bool CvDiplomacyAI::IsPlayerCapturedHolyCity(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabPlayerCapturedHolyCity[(int)ePlayer];
+	return m_pabPlayerCapturedHolyCity[(int)ePlayer];
 }
 
 /// Sets if ePlayer captured our Holy City
@@ -8967,7 +8967,7 @@ void CvDiplomacyAI::SetEstimateOtherPlayerVictoryDisputeLevel(PlayerTypes ePlaye
 bool CvDiplomacyAI::IsShareOpinionAccepted(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabShareOpinionAccepted[(int)ePlayer];
+	return m_pabShareOpinionAccepted[(int)ePlayer];
 }
 
 void CvDiplomacyAI::SetShareOpinionAccepted(PlayerTypes ePlayer, bool bValue)
@@ -9021,7 +9021,7 @@ bool CvDiplomacyAI::IsShareOpinionTooSoon(PlayerTypes ePlayer) const
 bool CvDiplomacyAI::IsPlayerMoveTroopsRequestAccepted(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabMoveTroopsRequestAccepted[(int)ePlayer];
+	return m_pabMoveTroopsRequestAccepted[(int)ePlayer];
 }
 
 void CvDiplomacyAI::SetPlayerMoveTroopsRequestAccepted(PlayerTypes ePlayer, bool bNewValue)
@@ -9067,7 +9067,7 @@ bool CvDiplomacyAI::IsTooSoonForMoveTroopsRequest(PlayerTypes ePlayer) const
 bool CvDiplomacyAI::IsOfferingGift(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabOfferingGift[(int)ePlayer];
+	return m_pabOfferingGift[(int)ePlayer];
 }
 
 /// Sets if this AI is offering a gift to ePlayer
@@ -9083,7 +9083,7 @@ void CvDiplomacyAI::SetOfferingGift(PlayerTypes ePlayer, bool bValue)
 bool CvDiplomacyAI::IsOfferedGift(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabOfferedGift[(int)ePlayer];
+	return m_pabOfferedGift[(int)ePlayer];
 }
 
 /// Sets if this AI offered a gift to ePlayer
@@ -9098,7 +9098,7 @@ void CvDiplomacyAI::SetOfferedGift(PlayerTypes ePlayer, bool bValue)
 bool CvDiplomacyAI::IsHelpRequestEverMade(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabHelpRequestEverMade[(int)ePlayer];
+	return m_pabHelpRequestEverMade[(int)ePlayer];
 }
 
 /// Sets if this player has ever requested help from us
@@ -9236,7 +9236,7 @@ void CvDiplomacyAI::ChangeVassalFailedProtectValue(PlayerTypes ePlayer, int iCha
 bool CvDiplomacyAI::IsMasterLiberatedMeFromVassalage(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabMasterLiberatedMeFromVassalage[(int)ePlayer];
+	return m_pabMasterLiberatedMeFromVassalage[(int)ePlayer];
 }
 
 void CvDiplomacyAI::SetMasterLiberatedMeFromVassalage(PlayerTypes ePlayer, bool bValue)
@@ -9338,7 +9338,7 @@ void CvDiplomacyAI::SetPlayerBrokenVassalAgreementTurn(PlayerTypes ePlayer, int 
 bool CvDiplomacyAI::IsVassalTaxRaised(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabVassalTaxRaised[(int)ePlayer];
+	return m_pabVassalTaxRaised[(int)ePlayer];
 }
 
 void CvDiplomacyAI::SetVassalTaxRaised(PlayerTypes ePlayer, bool bValue)
@@ -9352,7 +9352,7 @@ void CvDiplomacyAI::SetVassalTaxRaised(PlayerTypes ePlayer, bool bValue)
 bool CvDiplomacyAI::IsVassalTaxLowered(PlayerTypes ePlayer) const
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_MAJOR_CIVS) return false;
-	return (bool) m_pabVassalTaxLowered[(int)ePlayer];
+	return m_pabVassalTaxLowered[(int)ePlayer];
 }
 
 void CvDiplomacyAI::SetVassalTaxLowered(PlayerTypes ePlayer, bool bValue)
