@@ -9628,6 +9628,78 @@ void CvDiplomacyAI::DoTurn(DiplomacyPlayerType eTargetPlayer)
 	m_eTargetPlayer = DIPLO_ALL_PLAYERS;
 }
 
+//	-----------------------------------------------------------------------------------------------
+
+// ////////////////////////////////////
+// WAR DAMAGE & STATE EVALUATION
+// ////////////////////////////////////
+
+/// Every turn we're at peace war damage goes down a bit
+void CvDiplomacyAI::DoWarDamageDecay()
+{
+	if ((int)m_eTargetPlayer >= (int)DIPLO_FIRST_PLAYER)
+		return;
+
+	for (int iPlayerLoop = 0; iPlayerLoop < MAX_CIV_PLAYERS; iPlayerLoop++)
+	{
+		PlayerTypes eLoopPlayer = (PlayerTypes) iPlayerLoop;
+
+		if (!IsPlayerValid(eLoopPlayer, true, true))
+			continue;
+
+		int iValue = GetWarValueLost(eLoopPlayer);
+
+		// War damage we've suffered goes down by 1/50th every turn while at war (slower, but necessary to bring chance of white peace)
+		if (IsAtWar(eLoopPlayer))
+		{
+			if (iValue > 0)
+			{
+				int iChange = max((iValue/50), 1); // Must go down by at least 1
+				ChangeWarValueLost(eLoopPlayer, -iChange, /*bNoRatingChange*/ true);
+			}
+		}
+		// Goes down by 1/10th every turn while at peace
+		else
+		{
+			if (iValue > 0)
+			{
+				int iChange = max((iValue/10), 1); // Must go down by at least 1
+				ChangeWarValueLost(eLoopPlayer, -iChange, /*bNoRatingChange*/ true);
+			}
+		}
+
+		// Update our estimate of the war damage other players have suffered
+		for (int iThirdPartyLoop = 0; iThirdPartyLoop < MAX_CIV_PLAYERS; iThirdPartyLoop++)
+		{
+			PlayerTypes eThirdParty = (PlayerTypes) iThirdPartyLoop;
+
+			if (!IsPlayerValid(eThirdParty, true, true))
+				continue;
+
+			iValue = GetOtherPlayerWarValueLost(eLoopPlayer, eThirdParty);
+
+			if (GET_PLAYER(eLoopPlayer).IsAtWarWith(eThirdParty))
+			{
+				if (iValue > 0)
+				{
+					int iChange = max((iValue/50), 1); // Must go down by at least 1
+					ChangeOtherPlayerWarValueLost(eLoopPlayer, eThirdParty, -iChange);
+				}
+			}
+			else
+			{
+				if (iValue > 0)
+				{
+					int iChange = max((iValue/10), 1); // Must go down by at least 1
+					ChangeOtherPlayerWarValueLost(eLoopPlayer, eThirdParty, -iChange);
+				}
+			}
+		}
+	}
+}
+
+//	-----------------------------------------------------------------------------------------------
+
 /// Increment our turn counters
 void CvDiplomacyAI::DoCounters()
 {
@@ -25940,88 +26012,6 @@ void CvDiplomacyAI::DoUpdateWarDamageLevel()
 
 			SetWarDamageValue(eLoopPlayer, iValueLostRatio);
 			SetWarDamageLevel(eLoopPlayer, eWarDamageLevel);
-		}
-	}
-}
-
-/// Every turn we're at peace war damage goes down a bit
-void CvDiplomacyAI::DoWarDamageDecay()
-{
-	if ((int)m_eTargetPlayer >= (int)DIPLO_FIRST_PLAYER)
-		return;
-
-	int iValue;
-
-	TeamTypes eLoopThirdTeam;
-	PlayerTypes eLoopThirdPlayer;
-	int iThirdPlayerLoop;
-
-	// Loop through all (known) Players
-	TeamTypes eLoopTeam;
-	PlayerTypes eLoopPlayer;
-	for (int iPlayerLoop = 0; iPlayerLoop < MAX_CIV_PLAYERS; iPlayerLoop++)
-	{
-		eLoopPlayer = (PlayerTypes) iPlayerLoop;
-		eLoopTeam = GET_PLAYER(eLoopPlayer).getTeam();
-
-		if (IsPlayerValid(eLoopPlayer, /*bMyTeamIsValid*/ true))
-		{
-			// Update war damage we've suffered
-			if (!IsAtWar(eLoopPlayer))
-			{
-				iValue = GetWarValueLost(eLoopPlayer);
-
-				if (iValue > 0)
-				{
-					// Go down by 1/10th every turn at peace (minimum 1)
-					iValue = max(1, iValue/10);
-					ChangeWarValueLost(eLoopPlayer, -iValue, /*bNoRatingChange*/ true);
-				}
-			}
-			// Update war damage we've suffered while at war (slower, but necessary to bring chance of white peace)
-			else
-			{
-				iValue = GetWarValueLost(eLoopPlayer);
-
-				if (iValue > 0)
-				{
-					// Go down by 1/50th every turn at war (slower, but necessary to bring chance of white peace)
-					iValue = max(1, iValue/50);
-					ChangeWarValueLost(eLoopPlayer, -iValue, /*bNoRatingChange*/ true);
-				}
-			}
-
-			// Update war damage other players have suffered from our viewpoint
-			for (iThirdPlayerLoop = 0; iThirdPlayerLoop < MAX_CIV_PLAYERS; iThirdPlayerLoop++)
-			{
-				eLoopThirdPlayer = (PlayerTypes) iThirdPlayerLoop;
-				eLoopThirdTeam = GET_PLAYER(eLoopThirdPlayer).getTeam();
-
-				// These two players not at war?
-				if (!GET_TEAM(eLoopThirdTeam).isAtWar(eLoopTeam))
-				{
-					iValue = GetOtherPlayerWarValueLost(eLoopPlayer, eLoopThirdPlayer);
-
-					if (iValue > 0)
-					{
-						// Go down by 1/10th every turn at peace
-						iValue = max(1, iValue/10);
-						ChangeOtherPlayerWarValueLost(eLoopPlayer, eLoopThirdPlayer, -iValue);
-					}
-				}
-				// Update war damage they've suffered while at war
-				else
-				{
-					iValue = GetOtherPlayerWarValueLost(eLoopPlayer, eLoopThirdPlayer);
-
-					if (iValue > 0)
-					{
-						// Go down by 1/50 every turn at war
-						iValue = max(1, iValue/50);
-						ChangeOtherPlayerWarValueLost(eLoopPlayer, eLoopThirdPlayer, -iValue);
-					}
-				}
-			}
 		}
 	}
 }
