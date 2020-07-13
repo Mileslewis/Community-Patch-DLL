@@ -9792,12 +9792,12 @@ void CvDiplomacyAI::DoUpdateWarDamageLevels(bool bUpdateLogsOnStateChange)
 
 		if (IsPlayerValid(eLoopPlayer, true))
 		{
+			WarDamageLevelTypes eWarDamageLevel = WAR_DAMAGE_LEVEL_NONE;
 			int iWarValueLost = GetWarValueLost(eLoopPlayer);
+			int iValueLostRatio = 0;
 
 			if (iWarValueLost > 0)
 			{
-				int iValueLostRatio = 0;
-
 				if (iCurrentValue > 0)
 				{
 					iValueLostRatio = ((iValueLost * 100) / (iCurrentValue + iWarValueLost));
@@ -9806,8 +9806,7 @@ void CvDiplomacyAI::DoUpdateWarDamageLevels(bool bUpdateLogsOnStateChange)
 				{
 					iValueLostRatio = iWarValueLost;
 				}
-
-				WarDamageLevelTypes eWarDamageLevel = WAR_DAMAGE_LEVEL_NONE;
+				
 				if (iValueLostRatio >= /*90*/ GC.getWAR_DAMAGE_LEVEL_THRESHOLD_CRIPPLED())
 					eWarDamageLevel = WAR_DAMAGE_LEVEL_CRIPPLED;
 				else if (iValueLostRatio >= /*65*/ GC.getWAR_DAMAGE_LEVEL_THRESHOLD_SERIOUS())
@@ -9816,14 +9815,14 @@ void CvDiplomacyAI::DoUpdateWarDamageLevels(bool bUpdateLogsOnStateChange)
 					eWarDamageLevel = WAR_DAMAGE_LEVEL_MAJOR;
 				else if (iValueLostRatio >= /*15*/ GC.getWAR_DAMAGE_LEVEL_THRESHOLD_MINOR())
 					eWarDamageLevel = WAR_DAMAGE_LEVEL_MINOR;
-
-				SetWarDamageValue(eLoopPlayer, iValueLostRatio);
-				SetWarDamageLevel(eLoopPlayer, eWarDamageLevel);
 			}
-			else
+
+			SetWarDamageValue(eLoopPlayer, iValueLostRatio);
+			SetWarDamageLevel(eLoopPlayer, eWarDamageValue);
+
+			if (bUpdateLogsOnStateChange)
 			{
-				SetWarDamageValue(eLoopPlayer, 0);
-				SetWarDamageLevel(eLoopPlayer, WAR_DAMAGE_LEVEL_NONE);
+				// Logging stuff
 			}
 		}
 	}
