@@ -9496,7 +9496,6 @@ void CvDiplomacyAI::DoTurn(DiplomacyPlayerType eTargetPlayer)
 	DoUpdateWarProjections();
 
 	// First evaluation of peace willingness
-	DoUpdateWarProjections();
 	DoUpdateWarGoals();
 	DoUpdatePeaceTreatyWillingness();
 
