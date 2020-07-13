@@ -9484,25 +9484,26 @@ void CvDiplomacyAI::DoTurn(DiplomacyPlayerType eTargetPlayer)
 	////////////////////
 
 	// War damage decay and war state evaluation - comes before everything else!
+	// bUpdateLogsOnStateChange is set to false - always log the normal turn update
 	DoWarDamageDecay();
-	DoUpdateWarDamageLevels();
+	DoUpdateWarDamageLevels(false);
 	DoEstimateOtherPlayerWarDamageLevels();
-	DoUpdateWarStates();
+	DoUpdateWarStates(false);
 
 	// First evaluation of war and military statistics! We will evaluate again after changing our Opinion, Approach & War Status below.
 	// Update strength assessments
-	DoUpdatePlayerMilitaryStrengths();
-	DoUpdatePlayerEconomicStrengths();
-	DoUpdatePlayerTargetValues();
+	DoUpdatePlayerMilitaryStrengths(false);
+	DoUpdatePlayerEconomicStrengths(false);
+	DoUpdatePlayerTargetValues(false);
 
 	// Update threat levels
-	DoUpdateMilitaryThreats();
-	DoUpdateWarmongerThreats();
-	DoUpdateWarProjections();
+	DoUpdateMilitaryThreats(false);
+	DoUpdateWarmongerThreats(false);
+	DoUpdateWarProjections(false);
 
 	// First evaluation of peace willingness
-	DoUpdateWarGoals();
-	DoUpdatePeaceTreatyWillingness();
+	DoUpdateWarGoals(false);
+	DoUpdatePeaceTreatyWillingness(false);
 
 	// Forget about diplomatic penalties that have expired
 	DoForgetExpiredPenalties();
@@ -9572,22 +9573,22 @@ void CvDiplomacyAI::DoTurn(DiplomacyPlayerType eTargetPlayer)
 	MakeDemands(); // Make demands of other civs, if we're ready
 
 	// Second evaluation of war and military statistics - functions above may have changed it!
-	// bUpdateLogsSpecial is set to true for all of these functions - don't update the logs if no change happened
-	DoUpdateWarDamageLevels(true);
-	DoEstimateOtherPlayerWarDamageLevels(true);
-	DoUpdateWarStates(true);
-	DoUpdatePlayerMilitaryStrengths(true);
-	DoUpdatePlayerEconomicStrengths(true);
-	DoUpdatePlayerTargetValues(true);
-	DoUpdateMilitaryThreats(true); // DoUpdateWarmongerThreats is updated whenever warmongering penalties change, so don't update that here
-	DoUpdateWarProjections(true);
+	// bUpdateLogsOnStateChange is set to true for all of these functions - don't update the logs if no change happened
+	DoUpdateWarDamageLevels();
+	DoEstimateOtherPlayerWarDamageLevels();
+	DoUpdateWarStates();
+	DoUpdatePlayerMilitaryStrengths();
+	DoUpdatePlayerEconomicStrengths();
+	DoUpdatePlayerTargetValues();
+	DoUpdateMilitaryThreats(); // DoUpdateWarmongerThreats is updated whenever warmongering penalties change, so don't update that here
+	DoUpdateWarProjections();
 
 	// Minor Civ Approach
 	DoUpdateMinorCivApproaches();
 
 	// Second evaluation of peace willingness
-	DoUpdateWarGoals(true);
-	DoUpdatePeaceTreatyWillingness(true);
+	DoUpdateWarGoals();
+	DoUpdatePeaceTreatyWillingness();
 
 	// Make peace with humans we're at war with (humans are usually the biggest threat, so this is an exception to the "contact AIs first" rule).
 	DoMakePeaceWithHumanPlayers();
@@ -9693,6 +9694,136 @@ void CvDiplomacyAI::DoWarDamageDecay()
 					int iChange = max((iValue/10), 1); // Must go down by at least 1
 					ChangeOtherPlayerWarValueLost(eLoopPlayer, eThirdParty, -iChange);
 				}
+			}
+		}
+	}
+}
+
+/// Updates how much damage we have taken in wars against all players
+void CvDiplomacyAI::DoUpdateWarDamageLevels(bool bUpdateLogsOnStateChange)
+{
+	// Calculate the value of what we have currently - this is invariant so we will just do it once
+	int iCurrentValue = 0;
+	int iTypicalLandPower = GetPlayer()->GetMilitaryAI()->GetPowerOfStrongestBuildableUnit(DOMAIN_LAND);
+	int iTypicalNavalPower = GetPlayer()->GetMilitaryAI()->GetPowerOfStrongestBuildableUnit(DOMAIN_SEA);
+	int iTypicalAirPower = GetPlayer()->GetMilitaryAI()->GetPowerOfStrongestBuildableUnit(DOMAIN_AIR);
+	int iValueLoop;
+
+	// City value
+	for (CvCity* pLoopCity = GetPlayer()->firstCity(&iValueLoop); pLoopCity != NULL; pLoopCity = GetPlayer()->nextCity(&iValueLoop))
+	{
+		int iCityValue = (pLoopCity->getPopulation() * /*150*/ GC.getWAR_DAMAGE_LEVEL_INVOLVED_CITY_POP_MULTIPLIER());
+
+		// World Wonders make a city more valuable!
+		iCityValue += (pLoopCity->getNumWorldWonders() * 200);
+
+		// Multipliers
+		if (pLoopCity->IsOriginalCapitalForPlayer(GetPlayer()->GetID())) // My original capital
+		{
+			iCityValue *= 200;
+			iCityValue /= 100;
+		}
+		else if (pLoopCity->IsOriginalMajorCapital() || pLoopCity->GetCityReligions()->IsHolyCityForReligion(GetPlayer()->GetReligions()->GetCurrentReligion(false))) // My Holy City, or another major's original capital
+		{
+			iCityValue *= 150;
+			iCityValue /= 100;
+		}
+		else if (pLoopCity->IsOriginalMinorCapital() || pLoopCity->GetCityReligions()->IsHolyCityAnyReligion()) // A City-State's capital, or another major's Holy City
+		{
+			iCityValue *= 125;
+			iCityValue /= 100;
+		}
+
+		iCurrentValue += iCityValue;
+	}
+
+	// Unit value
+	for (CvUnit* pLoopUnit = GetPlayer()->firstUnit(&iValueLoop); pLoopUnit != NULL; pLoopUnit = GetPlayer()->nextUnit(&iValueLoop))
+	{
+		CvUnitEntry* pkUnitInfo = GC.getUnitInfo(pLoopUnit->getUnitType());
+		if (pkUnitInfo)
+		{
+			int iUnitValue = (pkUnitInfo->GetPower() * 100);
+			DomainTypes eDomain = (DomainTypes) pkUnitInfo->GetDomainType();
+
+			// Compare to strongest unit we can build in that domain, for an apples-to-apples comparison
+			if (eDomain == DOMAIN_SEA)
+			{
+				if (iTypicalNavalPower > 0)
+				{
+					iUnitValue /= iTypicalNavalPower;
+				}
+				else
+				{
+					iUnitValue = /*115*/ GC.getDEFAULT_WAR_VALUE_FOR_UNIT();
+				}
+			}
+			else if (eDomain == DOMAIN_AIR)
+			{
+				if (iTypicalAirPower > 0)
+				{
+					iUnitValue /= iTypicalAirPower;
+				}
+				else
+				{
+					iUnitValue = /*115*/ GC.getDEFAULT_WAR_VALUE_FOR_UNIT();
+				}
+			}
+			else
+			{
+				if (iTypicalLandPower > 0)
+				{
+					iUnitValue /= iTypicalLandPower;
+				}
+				else
+				{
+					iUnitValue = /*115*/ GC.getDEFAULT_WAR_VALUE_FOR_UNIT();
+				}
+			}
+
+			iCurrentValue += iUnitValue;
+		}
+	}
+
+	// Loop through all (known) Players
+	for (int iPlayerLoop = 0; iPlayerLoop < MAX_CIV_PLAYERS; iPlayerLoop++)
+	{
+		PlayerTypes eLoopPlayer = (PlayerTypes) iPlayerLoop;
+
+		if (IsPlayerValid(eLoopPlayer, true))
+		{
+			int iWarValueLost = GetWarValueLost(eLoopPlayer);
+
+			if (iWarValueLost > 0)
+			{
+				int iValueLostRatio = 0;
+
+				if (iCurrentValue > 0)
+				{
+					iValueLostRatio = ((iValueLost * 100) / (iCurrentValue + iWarValueLost));
+				}
+				else
+				{
+					iValueLostRatio = iWarValueLost;
+				}
+
+				WarDamageLevelTypes eWarDamageLevel = WAR_DAMAGE_LEVEL_NONE;
+				if (iValueLostRatio >= /*90*/ GC.getWAR_DAMAGE_LEVEL_THRESHOLD_CRIPPLED())
+					eWarDamageLevel = WAR_DAMAGE_LEVEL_CRIPPLED;
+				else if (iValueLostRatio >= /*65*/ GC.getWAR_DAMAGE_LEVEL_THRESHOLD_SERIOUS())
+					eWarDamageLevel = WAR_DAMAGE_LEVEL_SERIOUS;
+				else if (iValueLostRatio >= /*35*/ GC.getWAR_DAMAGE_LEVEL_THRESHOLD_MAJOR())
+					eWarDamageLevel = WAR_DAMAGE_LEVEL_MAJOR;
+				else if (iValueLostRatio >= /*15*/ GC.getWAR_DAMAGE_LEVEL_THRESHOLD_MINOR())
+					eWarDamageLevel = WAR_DAMAGE_LEVEL_MINOR;
+
+				SetWarDamageValue(eLoopPlayer, iValueLostRatio);
+				SetWarDamageLevel(eLoopPlayer, eWarDamageLevel);
+			}
+			else
+			{
+				SetWarDamageValue(eLoopPlayer, 0);
+				SetWarDamageLevel(eLoopPlayer, WAR_DAMAGE_LEVEL_NONE);
 			}
 		}
 	}
@@ -25940,80 +26071,6 @@ DisputeLevelTypes CvDiplomacyAI::GetTechDisputeLevel(PlayerTypes ePlayer) const
 	}
 	
 	return DISPUTE_LEVEL_NONE;
-}
-
-/// Updates how much damage we have taken in wars against all players
-void CvDiplomacyAI::DoUpdateWarDamageLevel()
-{
-	// Calculate the value of what we have currently
-	// This is invariant so we will just do it once
-	int iCurrentValue = 0;
-	int iTypicalPower = m_pPlayer->GetMilitaryAI()->GetPowerOfStrongestBuildableUnit(DOMAIN_LAND);
-	int iValueLoop;
-
-	// City value
-	for (CvCity* pLoopCity = GetPlayer()->firstCity(&iValueLoop); pLoopCity != NULL; pLoopCity = GetPlayer()->nextCity(&iValueLoop))
-	{
-		iCurrentValue += (pLoopCity->getPopulation() * /*140*/ GC.getWAR_DAMAGE_LEVEL_INVOLVED_CITY_POP_MULTIPLIER());
-		if (pLoopCity->IsOriginalCapital()) // anybody's
-		{
-			iCurrentValue *= 3;
-			iCurrentValue /= 2;
-		}
-	}
-
-	// Unit value
-	for (CvUnit* pLoopUnit = GetPlayer()->firstUnit(&iValueLoop); pLoopUnit != NULL; pLoopUnit = GetPlayer()->nextUnit(&iValueLoop))
-	{
-		CvUnitEntry* pkUnitInfo = GC.getUnitInfo(pLoopUnit->getUnitType());
-		if (pkUnitInfo)
-		{
-			int iUnitValue = pkUnitInfo->GetPower();
-			if (iTypicalPower > 0)
-			{
-				iUnitValue = iUnitValue * 100 / iTypicalPower;
-			}
-			else
-			{
-				iUnitValue = /*115*/ GC.getDEFAULT_WAR_VALUE_FOR_UNIT();
-			}
-			iCurrentValue += iUnitValue;
-		}
-	}
-
-	// Loop through all (known) Players
-	for (int iPlayerLoop = 0; iPlayerLoop < MAX_CIV_PLAYERS; iPlayerLoop++)
-	{
-		PlayerTypes eLoopPlayer = (PlayerTypes) iPlayerLoop;
-
-		if (IsPlayerValid(eLoopPlayer))
-		{
-			WarDamageLevelTypes eWarDamageLevel = WAR_DAMAGE_LEVEL_NONE;
-			int iValueLost = GetWarValueLost(eLoopPlayer);
-			int iValueLostRatio = 0;
-
-			if (iValueLost > 0)
-			{
-				// Total original value is the current value plus the amount lost, so compute the percentage on that
-				if (iCurrentValue > 0)
-					iValueLostRatio = iValueLost * 100 / (iCurrentValue + iValueLost);
-				else
-					iValueLostRatio = iValueLost;
-
-				if (iValueLostRatio >= /*90*/ GC.getWAR_DAMAGE_LEVEL_THRESHOLD_CRIPPLED())
-					eWarDamageLevel = WAR_DAMAGE_LEVEL_CRIPPLED;
-				else if (iValueLostRatio >= /*65*/ GC.getWAR_DAMAGE_LEVEL_THRESHOLD_SERIOUS())
-					eWarDamageLevel = WAR_DAMAGE_LEVEL_SERIOUS;
-				else if (iValueLostRatio >= /*35*/ GC.getWAR_DAMAGE_LEVEL_THRESHOLD_MAJOR())
-					eWarDamageLevel = WAR_DAMAGE_LEVEL_MAJOR;
-				else if (iValueLostRatio >= /*15*/ GC.getWAR_DAMAGE_LEVEL_THRESHOLD_MINOR())
-					eWarDamageLevel = WAR_DAMAGE_LEVEL_MINOR;
-			}
-
-			SetWarDamageValue(eLoopPlayer, iValueLostRatio);
-			SetWarDamageLevel(eLoopPlayer, eWarDamageLevel);
-		}
-	}
 }
 
 /// Updates what our guess is as to the amount of war damage a player has suffered to another player

@@ -1099,6 +1099,17 @@ public:
 	// ************************************
 
 	void DoTurn(DiplomacyPlayerType eTargetPlayer);
+
+	/////////////////////////////////////////////////////////
+	// War Damage & State Evaluation
+	/////////////////////////////////////////////////////////
+
+	void DoWarDamageDecay();
+	void DoUpdateWarDamageLevels(bool bUpdateLogsOnStateChange = true);
+
+
+
+
 	void DoCounters();
 
 	/////////////////////////////////////////////////////////
@@ -1220,9 +1231,6 @@ public:
 	int CalculateGoldPerTurnLostFromWar(PlayerTypes ePlayer, bool bOtherPlayerEstimate, bool bIgnoreDPs);
 	bool IsWarWouldBackstabFriend(PlayerTypes ePlayer);
 	bool IsWarWouldBackstabFriendTeamCheck(PlayerTypes ePlayer);
-
-	void DoUpdateWarDamageLevel();
-	void DoWarDamageDecay();
 
 	void DoUpdateOtherPlayerWarDamageLevel();
 
