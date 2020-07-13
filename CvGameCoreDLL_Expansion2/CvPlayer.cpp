@@ -9985,7 +9985,7 @@ void CvPlayer::DoLiberatePlayer(PlayerTypes ePlayer, int iOldCityID, bool bForce
 			// Update diplo stuff.
 			if (!GET_PLAYER(ePlayer).isHuman())
 			{
-				vector<PlayerTypes> v = pDiploAI->GetAllValidMajorCivs();
+				vector<PlayerTypes> v = pDiploAI->GetAllValidPlayers();
 				pDiploAI->DoUpdateOpinions();
 				pDiploAI->DoUpdateMajorCivApproaches(v);
 			}

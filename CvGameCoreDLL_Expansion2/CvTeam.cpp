@@ -1781,7 +1781,7 @@ void CvTeam::DoDeclareWar(TeamTypes eTeam, bool bDefensivePact, bool bMinorAllyP
 				}
 
 				// Attacker should reevaluate approaches towards all other major civs
-				vector<PlayerTypes> v = GET_PLAYER(eAttacker).GetDiplomacyAI()->GetAllValidMajorCivs();
+				vector<PlayerTypes> v = GET_PLAYER(eAttacker).GetDiplomacyAI()->GetAllValidPlayers();
 				GET_PLAYER(eAttacker).GetDiplomacyAI()->DoUpdateOpinions();
 				GET_PLAYER(eAttacker).GetDiplomacyAI()->DoUpdateMajorCivApproaches(v);
 			}

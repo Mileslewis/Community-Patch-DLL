@@ -2667,32 +2667,35 @@ TeamTypes CvDiplomacyAI::GetTeam() const
 
 
 /// Is this a valid player to be looking at for diplomacy purposes? (e.g. are they alive, do we know them, etc.)
-bool CvDiplomacyAI::IsPlayerValid(PlayerTypes eOtherPlayer, bool bMyTeamIsValid /* = false = */ ) const
+bool CvDiplomacyAI::IsPlayerValid(PlayerTypes eOtherPlayer, bool bIncludeMinors, bool bIncludeTeammates, bool bIncludeDeadPlayers, bool bIncludeNoCities) const
 {
 	if ((int)eOtherPlayer < 0 || (int)eOtherPlayer >= MAX_CIV_PLAYERS) return false;
+
+	// We cannot engage in diplomacy with ourselves!
+	if (eOtherPlayer == GetPlayer()->GetID())
+		return false;
+
+	// Can't engage in diplomacy with a player we've never met (or a teammate, if not including them)
+	if (!IsHasMet(eOtherPlayer, /*bMyTeamIsValid*/ bIncludeTeammates))
+		return false;
+
+	// Minor civ?
+	if (GET_PLAYER(eOtherPlayer).isMinorCiv() && !bIncludeMinors)
+		return false;
 
 	// Alive?
 	if (!GET_PLAYER(eOtherPlayer).isAlive())
 	{
-		return false;
+		if (!bIncludeDeadPlayers || !GET_PLAYER(eOtherPlayer).isEverAlive())
+		{
+			return false;
+		}
 	}
 
 	// REALLY Alive? (For some reason a player can be "alive" but have no Cities, Units, etc... grrrr)
-	if (GET_PLAYER(eOtherPlayer).getNumCities() == 0)
+	if (GET_PLAYER(eOtherPlayer).getNumCities() <= 0)
 	{
-		return false;
-	}
-
-	// A player we've met?
-	if (!GET_TEAM(GetPlayer()->getTeam()).isHasMet(GET_PLAYER(eOtherPlayer).getTeam()))
-	{
-		return false;
-	}
-
-	// On our team?
-	if (!bMyTeamIsValid)
-	{
-		if (GET_PLAYER(eOtherPlayer).getTeam() == GetPlayer()->getTeam())
+		if (!bIncludeNoCities || (GET_PLAYER(eOtherPlayer).getNumUnits() <= 0))
 		{
 			return false;
 		}
@@ -2701,15 +2704,15 @@ bool CvDiplomacyAI::IsPlayerValid(PlayerTypes eOtherPlayer, bool bMyTeamIsValid 
 	return true;
 }
 
-/// Returns the number of valid major civs
-int CvDiplomacyAI::GetNumValidMajorCivs() const
+/// Returns the number of valid players
+int CvDiplomacyAI::GetNumValidPlayers(bool bIncludeMinors, bool bIncludeTeammates, bool bIncludeDeadPlayers, bool bIncludeNoCities) const
 {
 	int iCount = 0;
 
 	for (int iPlayerLoop = 0; iPlayerLoop < MAX_MAJOR_CIVS; iPlayerLoop++)
 	{
 		PlayerTypes ePlayer = (PlayerTypes) iPlayerLoop;
-		if (IsPlayerValid(ePlayer) && GET_PLAYER(ePlayer).isMajorCiv())
+		if (IsPlayerValid(ePlayer, bIncludeMinors, bIncludeTeammates, bIncludeDeadPlayers, bIncludeNoCities))
 		{
 			iCount++;
 		}
@@ -2718,15 +2721,17 @@ int CvDiplomacyAI::GetNumValidMajorCivs() const
 	return iCount;
 }
 
-/// Returns a vector containing pointers to all valid major civs
-vector<PlayerTypes> CvDiplomacyAI::GetAllValidMajorCivs() const
+/// Returns a vector containing pointers to all valid players
+vector<PlayerTypes> CvDiplomacyAI::GetAllValidPlayers(bool bIncludeMinors, bool bIncludeTeammates, bool bIncludeDeadPlayers, bool bIncludeNoCities) const
 {
 	vector<PlayerTypes> result;
 	for (int iPlayerLoop = 0; iPlayerLoop < MAX_MAJOR_CIVS; iPlayerLoop++)
 	{
 		PlayerTypes ePlayer = (PlayerTypes) iPlayerLoop;
-		if (IsPlayerValid(ePlayer) && GET_PLAYER(ePlayer).isMajorCiv())
+		if (IsPlayerValid(ePlayer, bIncludeMinors, bIncludeTeammates, bIncludeDeadPlayers, bIncludeNoCities))
+		{
 			result.push_back(ePlayer);
+		}
 	}
 	
 	return result;
@@ -22080,7 +22085,7 @@ bool CvDiplomacyAI::IsGoodChoiceForDoF(PlayerTypes ePlayer)
 
 	int iNumDoFsAlreadyWanted = GetNumDoFsWanted(ePlayer);
 	int iDoFWillingness = GetPlayer()->GetDiplomacyAI()->GetDoFWillingness();
-	int iNumCivs = GetNumValidMajorCivs();
+	int iNumCivs = GetNumValidPlayers();
 
 	iDoFWillingness = ((iDoFWillingness * iNumCivs) / 20);
 	if (iDoFWillingness <= 0)
@@ -22198,7 +22203,7 @@ bool CvDiplomacyAI::IsGoodChoiceForDefensivePact(PlayerTypes ePlayer)
 
 	int iNumDPsAlreadyWanted = GetNumDefensivePactsWanted(ePlayer);
 	int iLoyalty = GetPlayer()->GetDiplomacyAI()->GetLoyalty();
-	int iNumCivs = GetNumValidMajorCivs();
+	int iNumCivs = GetNumValidPlayers();
 
 	iLoyalty = ((iLoyalty * iNumCivs) / 40);
 	if (iLoyalty <= 0)

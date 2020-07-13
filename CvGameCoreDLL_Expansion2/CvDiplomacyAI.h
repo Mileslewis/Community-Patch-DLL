@@ -105,9 +105,9 @@ public:
 	// Helper Functions
 	// ************************************
 
-	bool IsPlayerValid(PlayerTypes eOtherPlayer, bool bMyTeamIsValid = false) const;
-	int GetNumValidMajorCivs() const;
-	vector<PlayerTypes> GetAllValidMajorCivs() const;
+	bool IsPlayerValid(PlayerTypes eOtherPlayer, bool bIncludeMinors = false, bool bIncludeTeammates = false, bool bIncludeDeadPlayers = false, bool bIncludeNoCities = true) const;
+	int GetNumValidPlayers(bool bIncludeMinors = false, bool bIncludeTeammates = false, bool bIncludeDeadPlayers = false, bool bIncludeNoCities = true) const;
+	vector<PlayerTypes> GetAllValidPlayers(bool bIncludeMinors = false, bool bIncludeTeammates = false, bool bIncludeDeadPlayers = false, bool bIncludeNoCities = true) const;
 
 	bool IsAtWar(PlayerTypes eOtherPlayer) const;
 	bool IsAlwaysAtWar(PlayerTypes eOtherPlayer) const;
