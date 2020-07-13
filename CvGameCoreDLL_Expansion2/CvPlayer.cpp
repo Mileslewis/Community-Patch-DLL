@@ -3064,10 +3064,8 @@ void CvPlayer::acquireCity(CvCity* pOldCity, bool bConquest, bool bGift)
 			}
 		}
 	}
-	if(bConquest)
+	if (bConquest)
 	{
-		GetDiplomacyAI()->SetPlayerNumTurnsSinceCityCapture(pOldCity->getOwner(), 0);
-
 #if defined(MOD_BALANCE_CORE)
 		if (pOldCity->GetCityReligions()->IsHolyCityAnyReligion())
 		{
@@ -3108,45 +3106,89 @@ void CvPlayer::acquireCity(CvCity* pOldCity, bool bConquest, bool bGift)
 		}
 #endif
 
-		if(!isBarbarian() && !pOldCity->isBarbarian())
+		if (!isBarbarian() && !pOldCity->isBarbarian())
 		{
-			int iDefaultCityValue = /*150*/ GC.getWAR_DAMAGE_LEVEL_CITY_WEIGHT();
+			GetDiplomacyAI()->SetPlayerNumTurnsSinceCityCapture(pOldCity->getOwner(), 0);
 
 			// Notify Diplo AI that damage has been done
-			int iValue = iDefaultCityValue;
-			iValue += pOldCity->getPopulation() * /*100*/ GC.getWAR_DAMAGE_LEVEL_INVOLVED_CITY_POP_MULTIPLIER();
-			if (pOldCity->IsOriginalCapital())
+			int iCityValue = /*175*/ GC.getWAR_DAMAGE_LEVEL_CITY_WEIGHT();
+
+			iCityValue += (pOldCity->getPopulation() * /*150*/ GC.getWAR_DAMAGE_LEVEL_INVOLVED_CITY_POP_MULTIPLIER());
+			iCityValue += (pOldCity->getNumWorldWonders() * /*200*/ GC.getWAR_DAMAGE_LEVEL_WORLD_WONDER_MULTIPLIER());
+
+			// Multipliers
+			// Their original capital
+			if (pOldCity->IsOriginalCapitalForPlayer(pOldCity->getOwner()))
 			{
-				iValue *= 3;
-				iValue /= 2;
+				iCityValue *= 200;
+				iCityValue /= 100;
 			}
-#if defined(MOD_BALANCE_CORE)
-			if(pOldCity->getNumWorldWonders() > 0)
+			// Another major's original capital, or their Holy City
+			else if (pLoopCity->IsOriginalMajorCapital() || pLoopCity->GetCityReligions()->IsHolyCityForReligion(GET_PLAYER(pOldCity->getOwner()).GetReligions()->GetCurrentReligion(false)))
 			{
-				iValue += (pOldCity->getNumWorldWonders() * /*100*/ GC.getWAR_DAMAGE_LEVEL_INVOLVED_CITY_POP_MULTIPLIER());
+				iCityValue *= 150;
+				iCityValue /= 100;
+			}
+			// A City-State's capital, or another major's Holy City
+			else if (pLoopCity->IsOriginalMinorCapital() || pLoopCity->GetCityReligions()->IsHolyCityAnyReligion())
+			{
+				iCityValue *= 125;
+				iCityValue /= 100;
 			}
 
+			// Much less impactful if we've already owned the city before.
 			int iNumTimesOwned(pOldCity->GetNumTimesOwned(GetID()));
 			if (iNumTimesOwned > 1)
 			{
-				iValue /= (iNumTimesOwned * 3);
+				iCityValue /= (iNumTimesOwned * 3);
+			}
+
+#if defined(MOD_DIPLOMACY_CIV4_FEATURES)
+			if (MOD_DIPLOMACY_CIV4_FEATURES && bConquest)
+			{
+				// If the city belonged to a vassal, penalize the masters
+				if (GET_PLAYER(pOldCity->getOwner()).isMajorCiv() && GET_PLAYER(pOldCity->getOwner()).IsVassalOfSomeone())
+				{
+					for (int iPlayerLoop = 0; iPlayerLoop < MAX_MAJOR_CIVS; iPlayerLoop++)
+					{
+						PlayerTypes eLoopPlayer = (PlayerTypes) iPlayerLoop;
+						if (pOldOwnerDiploAI->IsPlayerValid(eLoopPlayer) && pOldOwnerDiploAI->IsVassal(eLoopPlayer))
+						{
+							pOldOwnerDiploAI->ChangeVassalFailedProtectValue(eLoopPlayer, iCityValue);
+						}
+					}
+				}
+				// If the conqueror has any vassals, see if any nearby vassals are grateful for the protection
+				if (isMajorCiv() && GetNumVassals() > 0)
+				{
+					for (int iPlayerLoop = 0; iPlayerLoop < MAX_MAJOR_CIVS; iPlayerLoop++)
+					{
+						PlayerTypes eLoopPlayer = (PlayerTypes) iPlayerLoop;
+						if (GetDiplomacyAI()->IsPlayerValid(eLoopPlayer) && GetDiplomacyAI()->IsMaster(eLoopPlayer) && GET_PLAYER(eLoopPlayer).GetProximityToPlayer(pOldCity->getOwner()) >= PLAYER_PROXIMITY_CLOSE)
+						{
+							GET_PLAYER(eLoopPlayer).GetDiplomacyAI()->ChangeVassalProtectValue(GetID(), iCityValue);
+						}
+					}
+				}
 			}
 #endif
+			// Update military rating for both players
+			ChangeMilitaryRating(iCityValue); // rating up for winner (us)
+			GET_PLAYER(ePlayer).ChangeMilitaryRating(-iCityValue); // rating down for loser (them)
 
 			int iWarscoremod = GetWarScoreModifier();
 			if (iWarscoremod != 0)
 			{
-				iValue *= (iWarscoremod + 100);
-				iValue /= 100;
+				iCityValue *= (iWarscoremod + 100);
+				iCityValue /= 100;
 			}
 
 			// My viewpoint
-			GetDiplomacyAI()->ChangeOtherPlayerWarValueLost(pOldCity->getOwner(), GetID(), iValue);
+			GetDiplomacyAI()->ChangeOtherPlayerWarValueLost(pOldCity->getOwner(), GetID(), iCityValue);
 			// Bad guy's viewpoint
-			GET_PLAYER(pOldCity->getOwner()).GetDiplomacyAI()->ChangeWarValueLost(GetID(), iValue);
+			GET_PLAYER(pOldCity->getOwner()).GetDiplomacyAI()->ChangeWarValueLost(GetID(), iCityValue);
 
 			// zero out any liberation credit since we just captured a city from them
-			PlayerTypes ePlayer;
 			CvDiplomacyAI* pOldOwnerDiploAI = GET_PLAYER(pOldCity->getOwner()).GetDiplomacyAI();
 			pOldOwnerDiploAI->SetPlayerLiberatedCapital(GetID(), false);
 			pOldOwnerDiploAI->SetNumCitiesLiberatedBy(GetID(), 0);
@@ -3164,8 +3206,9 @@ void CvPlayer::acquireCity(CvCity* pOldCity, bool bConquest, bool bGift)
 			// increment captured city counter
 			pOldOwnerDiploAI->ChangeNumCitiesCapturedBy(GetID(), 1);
 
+			/*
 			iValue = iDefaultCityValue;
-			iValue += pOldCity->getPopulation() * /*120*/ GC.getWAR_DAMAGE_LEVEL_UNINVOLVED_CITY_POP_MULTIPLIER();
+			iValue += pOldCity->getPopulation() *120* GC.getWAR_DAMAGE_LEVEL_UNINVOLVED_CITY_POP_MULTIPLIER();
 
 			// Now update everyone else in the world, but use a different multiplier (since they don't have complete info on the situation - they don't know when Units are killed)
 			for(int iPlayerLoop = 0; iPlayerLoop < MAX_CIV_PLAYERS; iPlayerLoop++)
@@ -3178,36 +3221,7 @@ void CvPlayer::acquireCity(CvCity* pOldCity, bool bConquest, bool bGift)
 					GET_PLAYER(ePlayer).GetDiplomacyAI()->ChangeOtherPlayerWarValueLost(pOldCity->getOwner(), GetID(), iValue);
 				}
 			}
-
-#if defined(MOD_DIPLOMACY_CIV4_FEATURES)
-			if (MOD_DIPLOMACY_CIV4_FEATURES && bConquest)
-			{
-				// If the city belonged to a vassal, penalize the masters
-				if (GET_PLAYER(pOldCity->getOwner()).isMajorCiv() && GET_PLAYER(pOldCity->getOwner()).IsVassalOfSomeone())
-				{
-					for (int iPlayerLoop = 0; iPlayerLoop < MAX_MAJOR_CIVS; iPlayerLoop++)
-					{
-						PlayerTypes eLoopPlayer = (PlayerTypes) iPlayerLoop;
-						if (pOldOwnerDiploAI->IsPlayerValid(eLoopPlayer) && pOldOwnerDiploAI->IsVassal(eLoopPlayer))
-						{
-							pOldOwnerDiploAI->ChangeVassalFailedProtectValue(eLoopPlayer, iValue);
-						}
-					}
-				}
-				// If the conqueror has any vassals, see if any nearby vassals are grateful for the protection
-				if (isMajorCiv() && GetNumVassals() > 0)
-				{
-					for (int iPlayerLoop = 0; iPlayerLoop < MAX_MAJOR_CIVS; iPlayerLoop++)
-					{
-						PlayerTypes eLoopPlayer = (PlayerTypes) iPlayerLoop;
-						if (GetDiplomacyAI()->IsPlayerValid(eLoopPlayer) && GetDiplomacyAI()->IsMaster(eLoopPlayer) && GET_PLAYER(eLoopPlayer).GetProximityToPlayer(pOldCity->getOwner()) >= PLAYER_PROXIMITY_CLOSE)
-						{
-							GET_PLAYER(eLoopPlayer).GetDiplomacyAI()->ChangeVassalProtectValue(GetID(), iValue);
-						}
-					}
-				}
-			}
-#endif
+			*/
 		}
 
 		GetMilitaryAI()->LogCityCaptured(pOldCity, pOldCity->getOwner());

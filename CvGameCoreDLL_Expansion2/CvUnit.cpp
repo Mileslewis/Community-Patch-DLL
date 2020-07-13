@@ -2389,28 +2389,60 @@ void CvUnit::kill(bool bDelay, PlayerTypes ePlayer /*= NO_PLAYER*/)
 			kPlayer.doInstantYield(INSTANT_YIELD_TYPE_DEATH);
 		}
 #endif
-		if (!GET_PLAYER(ePlayer).isBarbarian() && ePlayer != getOwner())
+		// Notify Diplo AI that the damage has been done
+		if (ePlayer != getOwner() && !GET_PLAYER(ePlayer).isBarbarian())
 		{
-			// Notify Diplo AI that damage has been done
-			// Best unit that can be built now is given value of 100
-			int iValue = getUnitInfo().GetPower();
+			// Best unit that can be built now is given a value of 100
+			DomainTypes eDomain = (DomainTypes) getUnitInfo().getDomainType();
+			int iUnitValue = (getUnitInfo().getPower() * 100);
+
+			if (!isBarbarian())
+			{
+				if (eDomain == DOMAIN_AIR)
+				{
+					int iTypicalAirPower = GET_PLAYER(getOwner()).GetMilitaryAI()->GetPowerOfStrongestBuildableUnit(DOMAIN_AIR);
+					if (iTypicalAirPower > 0)
+					{
+						iUnitValue /= iTypicalAirPower;
+					}
+					else
+					{
+						iUnitValue = /*100*/ GC.getDEFAULT_WAR_VALUE_FOR_UNIT();
+					}
+				}
+				else if (eDomain == DOMAIN_SEA)
+				{
+					int iTypicalSeaPower = GET_PLAYER(getOwner()).GetMilitaryAI()->GetPowerOfStrongestBuildableUnit(DOMAIN_SEA);
+					if (iTypicalNavalPower > 0)
+					{
+						iUnitValue /= iTypicalNavalPower;
+					}
+					else
+					{
+						iUnitValue = /*100*/ GC.getDEFAULT_WAR_VALUE_FOR_UNIT();
+					}
+				}
+				else
+				{
+					int iTypicalLandPower = GET_PLAYER(getOwner()).GetMilitaryAI()->GetPowerOfStrongestBuildableUnit(DOMAIN_LAND);
+					if (iTypicalLandPower > 0)
+					{
+						iUnitValue /= iTypicalLandPower;
+					}
+					else
+					{
+						iUnitValue = /*100*/ GC.getDEFAULT_WAR_VALUE_FOR_UNIT();
+					}
+				}
+			}
+
+			// Diplo penalty for killing civilian units
 			int iCivValue = 0;
-
-			int iTypicalPower = !isBarbarian() ? GET_PLAYER(getOwner()).GetMilitaryAI()->GetPowerOfStrongestBuildableUnit(DOMAIN_LAND) : 0;
-
-			if (iTypicalPower > 0)
-			{
-				iValue = iValue * 100 / iTypicalPower;
-			}
-			else
-			{
-				iValue = /*115*/ GC.getDEFAULT_WAR_VALUE_FOR_UNIT();
-			}
-
 			if (IsCivilianUnit() && pPlot && !pPlot->isCity()) // Don't apply the diplo penalty for units stationed in a city, since civilians aren't being targeted in particular
 			{
 				// AI cares less about lost workers / etc in lategame
-				int iEraFactor = max(8 - GET_PLAYER(getOwner()).GetCurrentEra(), 1);
+				int iEraFactor = !isBarbarian() ? GET_PLAYER(getOwner()).GetCurrentEra() : GC.getGame().getCurrentEra();
+				iEraFactor = max((8 - iEraFactor), 1);
 
 				if (!IsGreatGeneral() && !IsGreatAdmiral() && !IsSapper() && GetOriginalOwner() == getOwner())
 				{
@@ -2440,21 +2472,10 @@ void CvUnit::kill(bool bDelay, PlayerTypes ePlayer /*= NO_PLAYER*/)
 			if (!isBarbarian())
 			{
 				GET_PLAYER(getOwner()).GetDiplomacyAI()->ChangeNumTimesRazed(ePlayer, iCivValue);
-
-				int iWarscoremod = GET_PLAYER(ePlayer).GetWarScoreModifier();
-				if (iWarscoremod != 0)
-				{
-					iValue *= (iWarscoremod + 100);
-					iValue /= 100;
-				}
-				// My viewpoint
-				GET_PLAYER(getOwner()).GetDiplomacyAI()->ChangeWarValueLost(ePlayer, iValue);
-				// Bad guy's viewpoint
-				GET_PLAYER(ePlayer).GetDiplomacyAI()->ChangeOtherPlayerWarValueLost(getOwner(), ePlayer, iValue);
 			}
-		
+
 #if defined(MOD_DIPLOMACY_CIV4_FEATURES)
-			if (MOD_DIPLOMACY_CIV4_FEATURES && (iValue > 0 || iCivValue > 0)) 
+			if (MOD_DIPLOMACY_CIV4_FEATURES && (iUnitValue > 0 || iCivValue > 0)) 
 			{
 				iCivValue *= 20;
 
@@ -2465,16 +2486,15 @@ void CvUnit::kill(bool bDelay, PlayerTypes ePlayer /*= NO_PLAYER*/)
 					if (GET_PLAYER(pPlot->getOwner()).getTeam() == GET_PLAYER(getOwner()).getTeam())
 					{
 						// Loop through all masters and penalize them
-						PlayerTypes eLoopPlayer;
 						for (int iPlayerLoop = 0; iPlayerLoop < MAX_MAJOR_CIVS; iPlayerLoop++)
 						{
-							eLoopPlayer = (PlayerTypes) iPlayerLoop;
+							PlayerTypes eLoopPlayer = (PlayerTypes) iPlayerLoop;
 							if (GET_PLAYER(getOwner()).GetDiplomacyAI()->IsPlayerValid(eLoopPlayer) && GET_PLAYER(getOwner()).GetDiplomacyAI()->IsVassal(eLoopPlayer))
 							{
 								if (iCivValue > 0)
 									GET_PLAYER(getOwner()).GetDiplomacyAI()->ChangeVassalFailedProtectValue(eLoopPlayer, iCivValue);
 								else
-									GET_PLAYER(getOwner()).GetDiplomacyAI()->ChangeVassalFailedProtectValue(eLoopPlayer, iValue);
+									GET_PLAYER(getOwner()).GetDiplomacyAI()->ChangeVassalFailedProtectValue(eLoopPlayer, iUnitValue);
 							}
 						}
 					}
@@ -2485,22 +2505,21 @@ void CvUnit::kill(bool bDelay, PlayerTypes ePlayer /*= NO_PLAYER*/)
 						if (iCivValue > 0)
 							GET_PLAYER(getOwner()).GetDiplomacyAI()->ChangeVassalFailedProtectValue(plot()->getOwner(), iCivValue);
 						else
-							GET_PLAYER(getOwner()).GetDiplomacyAI()->ChangeVassalFailedProtectValue(plot()->getOwner(), iValue);
+							GET_PLAYER(getOwner()).GetDiplomacyAI()->ChangeVassalFailedProtectValue(plot()->getOwner(), iUnitValue);
 					}
 					// Unit killed in neutral territory near one of the vassal's cities (currently disabled)
 					else if (pPlot->getOwner() == NO_PLAYER && GET_PLAYER(getOwner()).GetCityDistanceInPlots(pPlot) <= /*0*/ GC.getVASSALAGE_FAILED_PROTECT_CITY_DISTANCE())
 					{
 						// Loop through all masters and penalize them
-						PlayerTypes eLoopPlayer;
 						for (int iPlayerLoop = 0; iPlayerLoop < MAX_MAJOR_CIVS; iPlayerLoop++)
 						{
-							eLoopPlayer = (PlayerTypes) iPlayerLoop;
+							PlayerTypes eLoopPlayer = (PlayerTypes) iPlayerLoop;
 							if (GET_PLAYER(getOwner()).GetDiplomacyAI()->IsPlayerValid(eLoopPlayer) && GET_PLAYER(getOwner()).GetDiplomacyAI()->IsVassal(eLoopPlayer))
 							{
 								if (iCivValue > 0)
 									GET_PLAYER(getOwner()).GetDiplomacyAI()->ChangeVassalFailedProtectValue(eLoopPlayer, iCivValue);
 								else
-									GET_PLAYER(getOwner()).GetDiplomacyAI()->ChangeVassalFailedProtectValue(eLoopPlayer, iValue);
+									GET_PLAYER(getOwner()).GetDiplomacyAI()->ChangeVassalFailedProtectValue(eLoopPlayer, iUnitValue);
 							}
 						}
 					}
@@ -2510,23 +2529,50 @@ void CvUnit::kill(bool bDelay, PlayerTypes ePlayer /*= NO_PLAYER*/)
 				{
 					if (iCivValue == 0 || (!isBarbarian() && (isFound() || IsFoundAbroad())))
 					{
-						PlayerTypes eLoopPlayer;
 						for (int iPlayerLoop = 0; iPlayerLoop < MAX_MAJOR_CIVS; iPlayerLoop++)
 						{
-							eLoopPlayer = (PlayerTypes) iPlayerLoop;
+							PlayerTypes eLoopPlayer = (PlayerTypes) iPlayerLoop;
+
 							if (GET_PLAYER(ePlayer).GetDiplomacyAI()->IsPlayerValid(eLoopPlayer) && GET_PLAYER(ePlayer).GetDiplomacyAI()->IsMaster(eLoopPlayer))
 							{
 								// If the unit killed was a Barbarian combat unit, recalculate unit value (comparing against the vassal's typical unit power)
 								if (isBarbarian() && iCivValue == 0)
 								{
-									iTypicalPower = GET_PLAYER(eLoopPlayer).GetMilitaryAI()->GetPowerOfStrongestBuildableUnit(DOMAIN_LAND);
-									if (iTypicalPower > 0)
+									if (eDomain == DOMAIN_AIR)
 									{
-										iValue = getUnitInfo().GetPower() * 100 / iTypicalPower;
+										int iTypicalAirPower = GET_PLAYER(eLoopPlayer).GetMilitaryAI()->GetPowerOfStrongestBuildableUnit(DOMAIN_AIR);
+										if (iTypicalAirPower > 0)
+										{
+											iUnitValue /= iTypicalAirPower;
+										}
+										else
+										{
+											iUnitValue = /*100*/ GC.getDEFAULT_WAR_VALUE_FOR_UNIT();
+										}
+									}
+									else if (eDomain == DOMAIN_SEA)
+									{
+										int iTypicalNavalPower = GET_PLAYER(eLoopPlayer).GetMilitaryAI()->GetPowerOfStrongestBuildableUnit(DOMAIN_SEA);
+										if (iTypicalNavalPower > 0)
+										{
+											iUnitValue /= iTypicalNavalPower;
+										}
+										else
+										{
+											iUnitValue = /*100*/ GC.getDEFAULT_WAR_VALUE_FOR_UNIT();
+										}
 									}
 									else
 									{
-										iValue = /*115*/ GC.getDEFAULT_WAR_VALUE_FOR_UNIT();
+										int iTypicalLandPower = GET_PLAYER(eLoopPlayer).GetMilitaryAI()->GetPowerOfStrongestBuildableUnit(DOMAIN_LAND);
+										if (iTypicalLandPower > 0)
+										{
+											iUnitValue /= iTypicalLandPower;
+										}
+										else
+										{
+											iUnitValue = /*100*/ GC.getDEFAULT_WAR_VALUE_FOR_UNIT();
+										}
 									}
 								}
 
@@ -2536,14 +2582,14 @@ void CvUnit::kill(bool bDelay, PlayerTypes ePlayer /*= NO_PLAYER*/)
 									if (iCivValue > 0)
 										GET_PLAYER(eLoopPlayer).GetDiplomacyAI()->ChangeVassalProtectValue(ePlayer, iCivValue);
 									else
-										GET_PLAYER(eLoopPlayer).GetDiplomacyAI()->ChangeVassalProtectValue(ePlayer, iValue);
+										GET_PLAYER(eLoopPlayer).GetDiplomacyAI()->ChangeVassalProtectValue(ePlayer, iUnitValue);
 								}
 								// Combat unit killed in a more distant plot visible to the vassal (and not in another player's lands - excluding the master's team and the vassal's team)
 								else if (pPlot->isVisible(GET_PLAYER(eLoopPlayer).getTeam()) && iCivValue == 0)
 								{
 									if (!pPlot->isOwned() || GET_PLAYER(pPlot->getOwner()).getTeam() == GET_PLAYER(ePlayer).getTeam() || GET_PLAYER(pPlot->getOwner()).getTeam() == GET_PLAYER(eLoopPlayer).getTeam())
 									{
-										GET_PLAYER(eLoopPlayer).GetDiplomacyAI()->ChangeVassalProtectValue(ePlayer, iValue);
+										GET_PLAYER(eLoopPlayer).GetDiplomacyAI()->ChangeVassalProtectValue(ePlayer, iUnitValue);
 									}
 								}
 							}
@@ -2552,6 +2598,24 @@ void CvUnit::kill(bool bDelay, PlayerTypes ePlayer /*= NO_PLAYER*/)
 				}
 			}
 #endif
+			// Finally, change war value lost
+			if (!isBarbarian())
+			{
+				// Update military rating for both players
+				GET_PLAYER(ePlayer).ChangeMilitaryRating(iUnitValue); // rating up for winner (them)
+				GET_PLAYER(getOwner()).ChangeMilitaryRating(-iUnitValue); // rating down for loser (us)
+
+				int iWarscoremod = GET_PLAYER(ePlayer).GetWarScoreModifier();
+				if (iWarscoremod != 0)
+				{
+					iUnitValue *= (iWarscoremod + 100);
+					iUnitValue /= 100;
+				}
+				// My viewpoint
+				GET_PLAYER(getOwner()).GetDiplomacyAI()->ChangeWarValueLost(ePlayer, iUnitValue);
+				// Bad guy's viewpoint
+				GET_PLAYER(ePlayer).GetDiplomacyAI()->ChangeOtherPlayerWarValueLost(getOwner(), ePlayer, iUnitValue);
+			}
 		}
 
 		if(NO_UNIT != getLeaderUnitType())
@@ -10339,18 +10403,35 @@ bool CvUnit::pillage()
 				if((pPlot->getOwner() != NO_PLAYER && !isBarbarian() && !GET_PLAYER(pPlot->getOwner()).isBarbarian()) && GET_TEAM(getTeam()).isAtWar(GET_PLAYER(pPlot->getOwner()).getTeam()))
 				{
 					// Notify Diplo AI that damage has been done
-					int iValue = (/*38*/ GC.getDEFAULT_WAR_VALUE_FOR_UNIT() / 3);
-					if(pPlot->getResourceType(getTeam()) != NO_RESOURCE)
+					int iPlotValue = /*40*/ GC.getWAR_DAMAGE_LEVEL_PILLAGED_TILE_WEIGHT();
+
+					// Resources increase plot value
+					if (pPlot->getResourceType(GET_PLAYER(pPlot->getOwner()).getTeam()) != NO_RESOURCE)
 					{
-						CvResourceInfo* pInfo = GC.getResourceInfo(pPlot->getResourceType(getTeam()));
-						if (pInfo && pInfo->getResourceUsage() == RESOURCEUSAGE_STRATEGIC)
+						CvResourceInfo* pInfo = GC.getResourceInfo(pPlot->getResourceType(GET_PLAYER(pPlot->getOwner()).getTeam()));
+						if (pInfo)
 						{
-							iValue *= 2;
+							if (pInfo->getResourceUsage() == RESOURCEUSAGE_STRATEGIC)
+							{
+								iPlotValue *= 200;
+								iPlotValue /= 100;
+							}
+							else if (pInfo->getResourceUsage() == RESOURCEUSAGE_LUXURY)
+							{
+								iPlotValue *= 150;
+								iPlotValue /= 100;
+							}
+							else if (pInfo->getResourceUsage() == RESOURCEUSAGE_BONUS)
+							{
+								iPlotValue *= 120;
+								iPlotValue /= 100;
+							}
 						}
 					}
-					if(pkImprovement->IsCreatedByGreatPerson())
+					// Great Person Improvements increase plot value
+					if (pkImprovement->IsCreatedByGreatPerson())
 					{
-						iValue *= 2;
+						iPlotValue *= 2;
 					}
 
 #if defined(MOD_DIPLOMACY_CIV4_FEATURES)
@@ -10362,21 +10443,26 @@ bool CvUnit::pillage()
 							PlayerTypes eLoopPlayer = (PlayerTypes) iPlayerLoop;
 							if (GET_PLAYER(pPlot->getOwner()).GetDiplomacyAI()->IsPlayerValid(eLoopPlayer) && GET_PLAYER(pPlot->getOwner()).GetDiplomacyAI()->IsVassal(eLoopPlayer))
 							{
-								GET_PLAYER(pPlot->getOwner()).GetDiplomacyAI()->ChangeVassalFailedProtectValue(eLoopPlayer, iValue);
+								GET_PLAYER(pPlot->getOwner()).GetDiplomacyAI()->ChangeVassalFailedProtectValue(eLoopPlayer, iPlotValue);
 							}
 						}
 					}
 #endif
+					// Update military rating for both players
+					GET_PLAYER(getOwner()).ChangeMilitaryRating(iPlotValue); // rating up for plot pillager (us)
+					GET_PLAYER(pPlot->getOwner()).ChangeMilitaryRating(-iPlotValue); // rating down for plot owner (them)
+
 					int iWarscoremod = GET_PLAYER(getOwner()).GetWarScoreModifier();
 					if (iWarscoremod != 0)
 					{
-						iValue *= (iWarscoremod + 100);
-						iValue /= 100;
+						iPlotValue *= (iWarscoremod + 100);
+						iPlotValue /= 100;
 					}
+
 					// My viewpoint
-					GET_PLAYER(getOwner()).GetDiplomacyAI()->ChangeOtherPlayerWarValueLost(pPlot->getOwner(), getOwner(), iValue);
+					GET_PLAYER(getOwner()).GetDiplomacyAI()->ChangeOtherPlayerWarValueLost(pPlot->getOwner(), getOwner(), iPlotValue);
 					// Bad guy's viewpoint
-					GET_PLAYER(pPlot->getOwner()).GetDiplomacyAI()->ChangeWarValueLost(getOwner(), iValue);
+					GET_PLAYER(pPlot->getOwner()).GetDiplomacyAI()->ChangeWarValueLost(getOwner(), iPlotValue);
 				}
 #endif
 				int iPillageGold = 0;
@@ -12728,36 +12814,151 @@ void CvUnit::PerformCultureBomb(int iRadius)
 
 	// Keep track of got hit by this so we can figure the diplo ramifications later
 	FStaticVector<bool, MAX_CIV_PLAYERS, true, c_eCiv5GameplayDLL, 0> vePlayersBombed;
-	for(int iPlayerLoop = 0; iPlayerLoop < MAX_CIV_PLAYERS; iPlayerLoop++)
+	FStaticVector<bool, MAX_CIV_PLAYERS, true, c_eCiv5GameplayDLL, 0> vePlayersStoleHighValueTileFrom;
+	for (int iPlayerLoop = 0; iPlayerLoop < MAX_CIV_PLAYERS; iPlayerLoop++)
 	{
 		vePlayersBombed.push_back(false);
+		vePlayersStoleHighValueTileFrom.push_back(false);
 	}
 
 	// Change ownership of nearby plots
 	int iBombRange = iRadius;
 	CvPlot* pLoopPlot;
-	for(int i = -iBombRange; i <= iBombRange; ++i)
+	for (int i = -iBombRange; i <= iBombRange; ++i)
 	{
-		for(int j = -iBombRange; j <= iBombRange; ++j)
+		for (int j = -iBombRange; j <= iBombRange; ++j)
 		{
 			pLoopPlot = ::plotXYWithRangeCheck(getX(), getY(), i, j, iBombRange);
 
-			if(pLoopPlot == NULL)
+			if (pLoopPlot == NULL)
 				continue;
 
 			// Can't be our plot
-			if(pLoopPlot->getOwner() == getOwner())
+			if (pLoopPlot->getOwner() == getOwner())
 				continue;
 
 			// Can't flip Cities, sorry
-			if(pLoopPlot->isCity())
+			if (pLoopPlot->isCity())
 				continue;
 
-			if(pLoopPlot->getOwner() != NO_PLAYER){
+			if (pLoopPlot->getOwner() != NO_PLAYER)
+			{
+				// Notify Diplo AI that damage is done
+				int iPlotValue = /*80*/ GC.getWAR_DAMAGE_LEVEL_STOLEN_TILE_WEIGHT();
+				int iMultiplier = 0;
+
+				// Natural Wonders increase plot value
+				if (pPlot->IsNaturalWonder())
+				{
+					iMultiplier += 100;
+					vePlayersStoleHighValueTileFrom[pLoopPlot->getOwner()] = true;
+				}
+				else
+				{
+					// Chokepoints increase plot value
+					if (pPlot->IsChokePoint())
+					{
+						iMultiplier += 50;
+						vePlayersStoleHighValueTileFrom[pLoopPlot->getOwner()] = true;
+					}
+					// Resources increase plot value
+					if (pPlot->getResourceType(GET_PLAYER(pPlot->getOwner()).getTeam()) != NO_RESOURCE)
+					{
+						CvResourceInfo* pInfo = GC.getResourceInfo(pPlot->getResourceType(GET_PLAYER(pPlot->getOwner()).getTeam()));
+						if (pInfo)
+						{
+							if (pInfo->getResourceUsage() == RESOURCEUSAGE_STRATEGIC)
+							{
+								iMultiplier += 100;
+								vePlayersStoleHighValueTileFrom[pLoopPlot->getOwner()] = true;
+							}
+							else if (pInfo->getResourceUsage() == RESOURCEUSAGE_LUXURY)
+							{
+								iMultiplier += 50;
+								vePlayersStoleHighValueTileFrom[pLoopPlot->getOwner()] = true;
+							}
+							else if (pInfo->getResourceUsage() == RESOURCEUSAGE_BONUS)
+							{
+								iMultiplier += 20;
+							}
+						}
+					}
+					// Great Person Improvements increase plot value
+					CvImprovementEntry* pkImprovement = GC.getImprovementInfo(pPlot->getImprovementType());
+					if (pkImprovement)
+					{
+						if (pkImprovement->IsCreatedByGreatPerson())
+						{
+							iMultiplier += 100;
+							vePlayersStoleHighValueTileFrom[pLoopPlot->getOwner()] = true;
+						}
+						// Stole a City-State embassy?
+						if (GET_PLAYER(pLoopPlot->getOwner()).isMinorCiv() && pLoopPlot->IsImprovementEmbassy())
+						{
+							PlayerTypes eEmbassyOwner = (PlayerTypes) pLoopPlot->GetPlayerThatBuiltImprovement();
+							if (GET_PLAYER(eEmbassyOwner).isAlive() && GET_PLAYER(eEmbassyOwner).getTeam() != GET_PLAYER(getOwner()).getTeam())
+							{
+								// Notify embassy owner
+								if (!vePlayersBombed[eEmbassyOwner])
+								{
+									CvNotifications* pNotifications = GET_PLAYER(eEmbassyOwner).GetNotifications();
+									if (pNotifications)
+									{
+										CvString strBuffer = GetLocalizedText("TXT_KEY_NOTIFICATION_GREAT_ARTIST_STOLE_PLOT", GET_PLAYER(getOwner()).getNameKey());
+										CvString strSummary = GetLocalizedText("TXT_KEY_NOTIFICATION_SUMMARY_GREAT_ARTIST_STOLE_PLOT", GET_PLAYER(getOwner()).getNameKey());
+										pNotifications->Add(NOTIFICATION_GENERIC, strBuffer, strSummary, pLoopPlot->getX(), pLoopPlot->getY(), -1);
+									}
+								}
+								vePlayersBombed[eEmbassyOwner] = true;
+								vePlayersStoleHighValueTileFrom[eEmbassyOwner] = true;
+							}
+						}
+					}
+				}
+
+				iPlotValue *= (100 + iMultiplier);
+				iPlotValue /= 100;
+
+				// If players are at war, this counts for war value - notify Diplo AI
+				if (GET_PLAYER(getOwner()).IsAtWarWith(pLoopPlot->getOwner()))
+				{
+#if defined(MOD_DIPLOMACY_CIV4_FEATURES)
+					// Did the plot owner's master fail to protect their territory?
+					if (MOD_DIPLOMACY_CIV4_FEATURES && !isBarbarian() && GET_PLAYER(pLoopPlot->getOwner()).isMajorCiv() && GET_PLAYER(pLoopPlot->getOwner()).IsVassalOfSomeone())
+					{
+						for (int iPlayerLoop = 0; iPlayerLoop < MAX_MAJOR_CIVS; iPlayerLoop++)
+						{
+							PlayerTypes eLoopPlayer = (PlayerTypes) iPlayerLoop;
+							if (GET_PLAYER(pLoopPlot->getOwner()).GetDiplomacyAI()->IsPlayerValid(eLoopPlayer) && GET_PLAYER(pLoopPlot->getOwner()).GetDiplomacyAI()->IsVassal(eLoopPlayer))
+							{
+								GET_PLAYER(pLoopPlot->getOwner()).GetDiplomacyAI()->ChangeVassalFailedProtectValue(eLoopPlayer, iPlotValue);
+							}
+						}
+					}
+#endif
+					// Update military rating for both players
+					GET_PLAYER(getOwner()).ChangeMilitaryRating(iPlotValue); // rating up for plot thief (us)
+					GET_PLAYER(pLoopPlot->getOwner()).ChangeMilitaryRating(-iPlotValue); // rating down for victim (them)
+
+					int iWarscoremod = GET_PLAYER(getOwner()).GetWarScoreModifier();
+					if (iWarscoremod != 0)
+					{
+						iPlotValue *= (iWarscoremod + 100);
+						iPlotValue /= 100;
+					}
+
+					// My viewpoint
+					GET_PLAYER(getOwner()).GetDiplomacyAI()->ChangeOtherPlayerWarValueLost(pLoopPlot->getOwner(), getOwner(), iPlotValue);
+					// Bad guy's viewpoint
+					GET_PLAYER(pLoopPlot->getOwner()).GetDiplomacyAI()->ChangeWarValueLost(getOwner(), iPlotValue);
+				}
+	
 				// Notify plot owner
-				if(pLoopPlot->getOwner() != getOwner() && !vePlayersBombed[pLoopPlot->getOwner()]){
+				if (!vePlayersBombed[pLoopPlot->getOwner()])
+				{
 					CvNotifications* pNotifications = GET_PLAYER(pLoopPlot->getOwner()).GetNotifications();
-					if(pNotifications){
+					if (pNotifications)
+					{
 						CvString strBuffer = GetLocalizedText("TXT_KEY_NOTIFICATION_GREAT_ARTIST_STOLE_PLOT", GET_PLAYER(getOwner()).getNameKey());
 						CvString strSummary = GetLocalizedText("TXT_KEY_NOTIFICATION_SUMMARY_GREAT_ARTIST_STOLE_PLOT", GET_PLAYER(getOwner()).getNameKey());
 						pNotifications->Add(NOTIFICATION_GENERIC, strBuffer, strSummary, pLoopPlot->getX(), pLoopPlot->getY(), -1);
@@ -12844,6 +13045,7 @@ void CvUnit::PerformCultureBomb(int iRadius)
 			if (pPlayer->isMinorCiv())
 			{
 				int iFriendship = /*-50*/ GC.getCULTURE_BOMB_MINOR_FRIENDSHIP_CHANGE();
+				iFriendship *= max((int)GC.getGame().getCurrentEra(), 1);
 				pPlayer->GetMinorCivAI()->ChangeFriendshipWithMajor(getOwner(), iFriendship);
 			}
 			// Major civ response
@@ -12851,7 +13053,8 @@ void CvUnit::PerformCultureBomb(int iRadius)
 			{
 				if (!GET_TEAM(eOtherTeam).isAtWar(getTeam()))
 				{
-					pPlayer->GetDiplomacyAI()->ChangeNumTimesCultureBombed(getOwner(), 1);
+					int iPenalty = (vePlayersStoleHighValueTileFrom[iSlotLoop]) ? 6 : 3;
+					pPlayer->GetDiplomacyAI()->ChangeNumTimesCultureBombed(getOwner(), iPenalty);
 				}
 
 				// Message for human

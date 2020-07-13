@@ -5276,18 +5276,11 @@ void CvDiplomacyAI::SetWarValueLost(PlayerTypes ePlayer, int iValue)
 }
 
 // Changes the value of stuff (Units & Cities) that we've lost in a war against a particular player
-void CvDiplomacyAI::ChangeWarValueLost(PlayerTypes ePlayer, int iChange, bool bNoRatingChange /* = false */)
+void CvDiplomacyAI::ChangeWarValueLost(PlayerTypes ePlayer, int iChange)
 {
 	if ((int)ePlayer < 0 || (int)ePlayer >= MAX_CIV_PLAYERS) return;
 
 	SetWarValueLost(ePlayer, GetWarValueLost(ePlayer) + iChange);
-
-	// Update military rating for both players
-	if (!bNoRatingChange)
-	{
-		GET_PLAYER(ePlayer).ChangeMilitaryRating(iChange); // rating up for winner (them)
-		GetPlayer()->ChangeMilitaryRating(-iChange); // rating down for loser (us)
-	}
 
 	if (iChange > 0)
 	{
@@ -9656,7 +9649,7 @@ void CvDiplomacyAI::DoWarDamageDecay()
 			if (iValue > 0)
 			{
 				int iChange = max((iValue/50), 1); // Must go down by at least 1
-				ChangeWarValueLost(eLoopPlayer, -iChange, /*bNoRatingChange*/ true);
+				ChangeWarValueLost(eLoopPlayer, -iChange);
 			}
 		}
 		// Goes down by 1/10th every turn while at peace
@@ -9665,7 +9658,7 @@ void CvDiplomacyAI::DoWarDamageDecay()
 			if (iValue > 0)
 			{
 				int iChange = max((iValue/10), 1); // Must go down by at least 1
-				ChangeWarValueLost(eLoopPlayer, -iChange, /*bNoRatingChange*/ true);
+				ChangeWarValueLost(eLoopPlayer, -iChange);
 			}
 		}
 
@@ -9712,23 +9705,25 @@ void CvDiplomacyAI::DoUpdateWarDamageLevels(bool bUpdateLogsOnStateChange)
 	// City value
 	for (CvCity* pLoopCity = GetPlayer()->firstCity(&iValueLoop); pLoopCity != NULL; pLoopCity = GetPlayer()->nextCity(&iValueLoop))
 	{
-		int iCityValue = (pLoopCity->getPopulation() * /*150*/ GC.getWAR_DAMAGE_LEVEL_INVOLVED_CITY_POP_MULTIPLIER());
-
-		// World Wonders make a city more valuable!
-		iCityValue += (pLoopCity->getNumWorldWonders() * 200);
+		int iCityValue = /*175*/ GC.getWAR_DAMAGE_LEVEL_CITY_WEIGHT();
+		iCityValue += (pLoopCity->getPopulation() * /*150*/ GC.getWAR_DAMAGE_LEVEL_INVOLVED_CITY_POP_MULTIPLIER());
+		iCityValue += (pLoopCity->getNumWorldWonders() * /*200*/ GC.getWAR_DAMAGE_LEVEL_WORLD_WONDER_MULTIPLIER());
 
 		// Multipliers
+		// Our original capital!
 		if (pLoopCity->IsOriginalCapitalForPlayer(GetPlayer()->GetID())) // My original capital
 		{
 			iCityValue *= 200;
 			iCityValue /= 100;
 		}
-		else if (pLoopCity->IsOriginalMajorCapital() || pLoopCity->GetCityReligions()->IsHolyCityForReligion(GetPlayer()->GetReligions()->GetCurrentReligion(false))) // My Holy City, or another major's original capital
+		// Another major's original capital, or our Holy City
+		else if (pLoopCity->IsOriginalMajorCapital() || pLoopCity->GetCityReligions()->IsHolyCityForReligion(GetPlayer()->GetReligions()->GetCurrentReligion(false)))
 		{
 			iCityValue *= 150;
 			iCityValue /= 100;
 		}
-		else if (pLoopCity->IsOriginalMinorCapital() || pLoopCity->GetCityReligions()->IsHolyCityAnyReligion()) // A City-State's capital, or another major's Holy City
+		// A City-State's capital, or another major's Holy City
+		else if (pLoopCity->IsOriginalMinorCapital() || pLoopCity->GetCityReligions()->IsHolyCityAnyReligion())
 		{
 			iCityValue *= 125;
 			iCityValue /= 100;
@@ -9744,44 +9739,49 @@ void CvDiplomacyAI::DoUpdateWarDamageLevels(bool bUpdateLogsOnStateChange)
 		if (pkUnitInfo)
 		{
 			int iUnitValue = (pkUnitInfo->GetPower() * 100);
-			DomainTypes eDomain = (DomainTypes) pkUnitInfo->GetDomainType();
 
-			// Compare to strongest unit we can build in that domain, for an apples-to-apples comparison
-			if (eDomain == DOMAIN_SEA)
+			if (iUnitValue > 0)
 			{
-				if (iTypicalNavalPower > 0)
-				{
-					iUnitValue /= iTypicalNavalPower;
-				}
-				else
-				{
-					iUnitValue = /*115*/ GC.getDEFAULT_WAR_VALUE_FOR_UNIT();
-				}
-			}
-			else if (eDomain == DOMAIN_AIR)
-			{
-				if (iTypicalAirPower > 0)
-				{
-					iUnitValue /= iTypicalAirPower;
-				}
-				else
-				{
-					iUnitValue = /*115*/ GC.getDEFAULT_WAR_VALUE_FOR_UNIT();
-				}
-			}
-			else
-			{
-				if (iTypicalLandPower > 0)
-				{
-					iUnitValue /= iTypicalLandPower;
-				}
-				else
-				{
-					iUnitValue = /*115*/ GC.getDEFAULT_WAR_VALUE_FOR_UNIT();
-				}
-			}
+				// Compare to strongest unit we can build in that domain, for an apples-to-apples comparison
+				// Best unit that can be built now is given a value of 100
+				DomainTypes eDomain = (DomainTypes) pkUnitInfo->GetDomainType();
 
-			iCurrentValue += iUnitValue;
+				if (eDomain == DOMAIN_AIR)
+				{
+					if (iTypicalAirPower > 0)
+					{
+						iUnitValue /= iTypicalAirPower;
+					}
+					else
+					{
+						iUnitValue = /*100*/ GC.getDEFAULT_WAR_VALUE_FOR_UNIT();
+					}
+				}
+				else if (eDomain == DOMAIN_SEA)
+				{
+					if (iTypicalNavalPower > 0)
+					{
+						iUnitValue /= iTypicalNavalPower;
+					}
+					else
+					{
+						iUnitValue = /*100*/ GC.getDEFAULT_WAR_VALUE_FOR_UNIT();
+					}
+				}
+				else
+				{
+					if (iTypicalLandPower > 0)
+					{
+						iUnitValue /= iTypicalLandPower;
+					}
+					else
+					{
+						iUnitValue = /*100*/ GC.getDEFAULT_WAR_VALUE_FOR_UNIT();
+					}
+				}
+
+				iCurrentValue += iUnitValue;
+			}
 		}
 	}
 
@@ -43295,7 +43295,7 @@ int CvDiplomacyAI::GetTimesCultureBombedScore(PlayerTypes ePlayer)
 {
 	int iOpinionWeight = 0;
 	if(GetNumTimesCultureBombed(ePlayer) > 0)
-		iOpinionWeight += (GetNumTimesCultureBombed(ePlayer) * /*30*/ GC.getOPINION_WEIGHT_CULTURE_BOMBED());
+		iOpinionWeight += (GetNumTimesCultureBombed(ePlayer) * /*10*/ GC.getOPINION_WEIGHT_CULTURE_BOMBED());
 	
 	return iOpinionWeight;
 }
@@ -45221,7 +45221,7 @@ bool CvDiplomacyAI::IsPlayerBadTheftTarget(PlayerTypes ePlayer, TheftTypes eThef
 			break;
 		case THEFT_TYPE_PLOT: // America UA
 			// Steal Natural Wonders and other teams' embassies, the City-State's feelings be damned!
-			if (pPlot->IsNaturalWonder(false))
+			if (pPlot->IsNaturalWonder())
 			{
 				return false;
 			}

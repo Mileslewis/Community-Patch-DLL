@@ -21178,26 +21178,27 @@ bool CvCity::DoRazingTurn()
 		{
 			return false;
 		}
-		
-		int iDefaultCityValue = /*150*/ GC.getWAR_DAMAGE_LEVEL_CITY_WEIGHT();
 
 		// Notify Diplo AI that damage has been done
-		int iValue = iDefaultCityValue;
+		int iRazeValue = /*175*/ GC.getWAR_DAMAGE_LEVEL_RAZING_BASE_WEIGHT();
 
-		iValue += getPopulation() * /*100*/ GC.getWAR_DAMAGE_LEVEL_INVOLVED_CITY_POP_MULTIPLIER();
-		iValue /= max(1, (GetRazingTurns() / 2));
-
-		int iWarscoremod = GET_PLAYER(getOwner()).GetWarScoreModifier();
-		if (iWarscoremod != 0)
+		if (iRazeValue > 0)
 		{
-			iValue *= (iWarscoremod + 100);
-			iValue /= 100;
-		}
+			iRazeValue += (getPopulation() * /*150*/ GC.getWAR_DAMAGE_LEVEL_INVOLVED_CITY_POP_MULTIPLIER()); // Don't factor in World Wonders here...losing them hurts the conqueror too, plus it's unlikely to occur.
+			iRazeValue /= max(1, (GetRazingTurns() / 2)); // Divide by 1/2 the number of razing turns left
 
-		// My viewpoint
-		GET_PLAYER(getOwner()).GetDiplomacyAI()->ChangeOtherPlayerWarValueLost(eFormerOwner, getOwner(), iValue);
-		// Bad guy's viewpoint
-		GET_PLAYER(eFormerOwner).GetDiplomacyAI()->ChangeWarValueLost(getOwner(), iValue, /*bNoRatingChange*/ true);
+			int iWarscoremod = GET_PLAYER(getOwner()).GetWarScoreModifier();
+			if (iWarscoremod != 0)
+			{
+				iRazeValue *= (iWarscoremod + 100);
+				iRazeValue /= 100;
+			}
+
+			// My viewpoint
+			GET_PLAYER(getOwner()).GetDiplomacyAI()->ChangeOtherPlayerWarValueLost(eFormerOwner, getOwner(), iRazeValue);
+			// Bad guy's viewpoint
+			GET_PLAYER(eFormerOwner).GetDiplomacyAI()->ChangeWarValueLost(getOwner(), iRazeValue);
+		}
 
 		int iEra = GET_PLAYER(eFormerOwner).GetCurrentEra();
 		if(iEra <= 0)
@@ -29005,20 +29006,109 @@ void CvCity::BuyPlot(int iPlotX, int iPlotY)
 	if (iCost > 0) 
 	{
 		//Did we buy this plot from someone? Oh no!
-		if(pPlot != NULL && pPlot->getOwner() != NO_PLAYER && pPlot->getOwner() != getOwner())
+		if (pPlot != NULL && pPlot->getOwner() != NO_PLAYER && pPlot->getOwner() != getOwner() && !GET_PLAYER(pPlot->getOwner()).isBarbarian() && GET_PLAYER(getOwner()).isMajorCiv())
 		{
-			if (!GET_PLAYER(pPlot->getOwner()).isHuman() && !GET_PLAYER(pPlot->getOwner()).isBarbarian())
+			// Notify Diplo AI that damage is done
+			int iPlotValue = /*80*/ GC.getWAR_DAMAGE_LEVEL_STOLEN_TILE_WEIGHT();
+			int iMultiplier = 0;
+			bool bStoleHighValueTile = false;
+
+			// Natural Wonders increase plot value
+			if (pPlot->IsNaturalWonder())
 			{
-				if(GET_PLAYER(pPlot->getOwner()).isMajorCiv())
+				iMultiplier += 100;
+				bStoleHighValueTile = true;
+			}
+			else
+			{
+				// Chokepoints increase plot value
+				if (pPlot->IsChokePoint())
 				{
-					if (!GET_TEAM(GET_PLAYER(pPlot->getOwner()).getTeam()).isAtWar(GET_PLAYER(getOwner()).getTeam()))
+					iMultiplier += 50;
+					bStoleHighValueTile = true;
+				}
+				// Resources increase plot value
+				if (pPlot->getResourceType(GET_PLAYER(pPlot->getOwner()).getTeam()) != NO_RESOURCE)
+				{
+					CvResourceInfo* pInfo = GC.getResourceInfo(pPlot->getResourceType(GET_PLAYER(pPlot->getOwner()).getTeam()));
+					if (pInfo)
 					{
-						GET_PLAYER(pPlot->getOwner()).GetDiplomacyAI()->ChangeNumTimesCultureBombed(getOwner(), 1);
+						if (pInfo->getResourceUsage() == RESOURCEUSAGE_STRATEGIC)
+						{
+							iMultiplier += 100;
+							bStoleHighValueTile = true;
+						}
+						else if (pInfo->getResourceUsage() == RESOURCEUSAGE_LUXURY)
+						{
+							iMultiplier += 50;
+							bStoleHighValueTile = true;
+						}
+						else if (pInfo->getResourceUsage() == RESOURCEUSAGE_BONUS)
+						{
+							iMultiplier += 20;
+						}
 					}
 				}
-				else if(GET_PLAYER(pPlot->getOwner()).isMinorCiv())
+				// Great Person Improvements increase plot value
+				CvImprovementEntry* pkImprovement = GC.getImprovementInfo(pPlot->getImprovementType());
+				if (pkImprovement)
 				{
-					GET_PLAYER(pPlot->getOwner()).GetMinorCivAI()->ChangeFriendshipWithMajor(getOwner(), -20);
+					if (pkImprovement->IsCreatedByGreatPerson())
+					{
+						iMultiplier += 100;
+						bStoleHighValueTile = true;
+					}
+					// Stole a City-State embassy?
+					if (GET_PLAYER(pLoopPlot->getOwner()).isMinorCiv() && pLoopPlot->IsImprovementEmbassy())
+					{
+						PlayerTypes eEmbassyOwner = (PlayerTypes) pLoopPlot->GetPlayerThatBuiltImprovement();
+						if (GET_PLAYER(eEmbassyOwner).isAlive() && GET_PLAYER(eEmbassyOwner).getTeam() != GET_PLAYER(getOwner()).getTeam())
+						{
+							// Diplo penalty with embassy owner if not at war
+							if (!GET_PLAYER(getOwner()).IsAtWarWith(eEmbassyOwner())
+							{
+								GET_PLAYER(eEmbassyOwner).GetDiplomacyAI()->ChangeNumTimesCultureBombed(getOwner(), 3);
+							}
+						}
+					}
+				}
+			}
+
+			iPlotValue *= (100 + iMultiplier);
+			iPlotValue /= 100;
+
+			// If players are at war, this counts for war value - notify Diplo AI that damage is done
+			if (GET_PLAYER(getOwner()).IsAtWarWith(pPlot->getOwner()))
+			{
+				// Update military rating for both players
+				GET_PLAYER(getOwner()).ChangeMilitaryRating(iPlotValue); // rating up for plot thief (us)
+				GET_PLAYER(pPlot->getOwner()).ChangeMilitaryRating(-iPlotValue); // rating down for victim (them)
+
+				int iWarscoremod = GET_PLAYER(getOwner()).GetWarScoreModifier();
+				if (iWarscoremod != 0)
+				{
+					iPlotValue *= (iWarscoremod + 100);
+					iPlotValue /= 100;
+				}
+
+				// My viewpoint
+				GET_PLAYER(getOwner()).GetDiplomacyAI()->ChangeOtherPlayerWarValueLost(pPlot->getOwner(), getOwner(), iPlotValue);
+				// Bad guy's viewpoint
+				GET_PLAYER(pPlot->getOwner()).GetDiplomacyAI()->ChangeWarValueLost(getOwner(), iPlotValue);
+			}
+			// If players are not at war, apply a diplo penalty
+			else
+			{
+				if (GET_PLAYER(pPlot->getOwner()).isMajorCiv())
+				{
+					int iPenalty = bStoleHighValueTile ? 3 : 1;
+					GET_PLAYER(pPlot->getOwner()).GetDiplomacyAI()->ChangeNumTimesCultureBombed(getOwner(), iPenalty);
+				}
+				else if (GET_PLAYER(pPlot->getOwner()).isMinorCiv())
+				{
+					int iEra = max((int)GC.getGame().getCurrentEra(), 1);
+					int iPenalty = bStoleHighValueTile ? 2 : 1;
+					GET_PLAYER(pPlot->getOwner()).GetMinorCivAI()->ChangeFriendshipWithMajor(getOwner(), (-20 * iEra * iPenalty));
 				}
 			}
 		}

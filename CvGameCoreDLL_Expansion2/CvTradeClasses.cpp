@@ -5242,8 +5242,8 @@ bool CvPlayerTrade::PlunderTradeRoute(int iTradeConnectionID)
 	if((eOwningPlayer != NO_PLAYER && !m_pPlayer->isBarbarian() && !GET_PLAYER(eOwningPlayer).isBarbarian()) && GET_TEAM(m_pPlayer->getTeam()).isAtWar(GET_PLAYER(eOwningPlayer).getTeam()))
 	{
 		// Notify Diplo AI that damage has been done
-		int iValue = iPlunderGoldValue/2;
-		if(iValue > 0)
+		int iValue = (iPlunderGoldValue/2);
+		if (iValue > 0)
 		{
 			int iWarscoremod = m_pPlayer->GetWarScoreModifier();
 			if (iWarscoremod != 0)
