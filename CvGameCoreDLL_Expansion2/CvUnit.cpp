@@ -30475,7 +30475,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 	iTemp = pkPromotionInfo->GetRoughRangedAttackMod();
 	if(iTemp != 0 && isRanged())
 	{
-		iExtra = getExtraRoughRangedAttackPercent();
+		iExtra = getExtraRoughRangedAttackMod();
 		iExtra = (iTemp + iExtra) * (iFlavorOffense + 2 * iFlavorDefense);
 		iExtra *= 0.3;
 		iValue += iExtra;
