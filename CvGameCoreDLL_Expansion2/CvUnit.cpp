@@ -1709,7 +1709,8 @@ void CvUnit::reset(int iID, UnitTypes eUnit, PlayerTypes eOwner, bool bConstruct
 	m_iBaseCombat = (NO_UNIT != m_eUnitType) ? m_pUnitInfo->GetCombat() : 0;
 	m_eCombatType = (NO_UNIT != m_eUnitType) ? (UnitCombatTypes)m_pUnitInfo->GetUnitCombatType() : NO_UNITCOMBAT;
 #if defined(MOD_API_EXTENSIONS)
-	m_iBaseRangedCombat = (NO_UNIT != m_eUnitType) ? m_pUnitInfo->GetRangedCombat() : 0;
+	m_iBaseRangedCombat = (NO_UNIT != m_eUnitType) ? m_pUnitInfo->
+	dCombat() : 0;
 #endif
 #if defined(MOD_UNITS_MAX_HP)
 	m_iMaxHitPointsBase = (NO_UNIT != m_eUnitType) ? m_pUnitInfo->GetMaxHitPoints() : GC.getMAX_HIT_POINTS();
@@ -2093,7 +2094,7 @@ void CvUnit::convert(CvUnit* pUnit, bool bIsUpgrade)
 			{
 				bool bMelee = false;
 				bool bRanged = false;
-				if((pkPromotionInfo->GetRangedAttackModifier() > 0) || (pkPromotionInfo->GetRangeChange() > 0) || (pkPromotionInfo->GetRangedAttackModifier() > 0) || (pkPromotionInfo->IsRangeAttackIgnoreLOS()) || (pkPromotionInfo->GetOpenRangedAttackMod() > 0) || (pkPromotionInfo->GetRoughRangedAttackMod() > 0) || (pkPromotionInfo->GetExtraAttacks() > 0))
+				if((pkPromotionInfo->dAttackModifier() > 0) || (pkPromotionInfo->GetRangeChange() > 0) || (pkPromotionInfo->GetRangedAttackModifier() > 0) || (pkPromotionInfo->IsRangeAttackIgnoreLOS()) || (pkPromotionInfo->GetOpenRangedAttackMod() > 0) || (pkPromotionInfo->GetRoughRangedAttackMod() > 0) || (pkPromotionInfo->GetExtraAttacks() > 0))
 				{
 					bRanged = true;
 				}
@@ -30270,6 +30271,8 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 	int iFlavorOffense = max(1, pFlavorMgr->GetIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_OFFENSE")));
 
 	int iFlavorDefense = max(1, pFlavorMgr->GetIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_DEFENSE")));
+	
+	int iFlavorCityDefense = max(1, pFlavorMgr->GetIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_CITY_DEFENSE")));
 
 	int iFlavorRanged = max(1, pFlavorMgr->GetIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_RANGED")));
 
@@ -30356,8 +30359,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		iExtra = (iTemp + iExtra) * (2 * iFlavorOffense + iFlavorDefense);
 		if (isRanged())
 		{
-			iExtra *= 0.3;
-			iExtra /= max(1,GetRange());		
+			iExtra *= 0.3;		
 		}
 		else
 			iExtra *= 0.6;
@@ -30369,7 +30371,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 	if (iTemp != 0)
 	{	
 		iExtra = iTemp * ( 2 * iFlavorOffense + iFlavorDefense);
-		iExtra *= -4;    			// not sure about this
+		iExtra *= -6;    			// not sure about this
 		iValue += iExtra;
 	}
 
@@ -30430,7 +30432,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		iValue += iExtra;
 	}
 
-	/*
+	
 
 	iTemp = pkPromotionInfo->GetOpenRangedAttackMod();
 	if(iTemp != 0 && isRanged())
@@ -30445,7 +30447,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		iValue += iExtra;
 	}
 
-	*/
+	
 
 	iTemp = pkPromotionInfo->GetOpenDefensePercent();
 	// M + mM: +15 Formation 1, 2. 
@@ -30454,10 +30456,6 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		iExtra = getExtraOpenDefensePercent();
 		iExtra = (iTemp + iExtra) * (2 * iFlavorOffense + iFlavorDefense);
 		iExtra *= 0.5;	
-		if(noDefensiveBonus())
-		{
-			iExtra /= 5;
-		}
 		iValue += iExtra;	
 	}
 
@@ -30479,14 +30477,14 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 
 	iTemp = pkPromotionInfo->GetRoughRangedAttackMod();
 	if(iTemp != 0 && isRanged())
+	if(iTemp != 0)
 	{
-		iExtra = getExtraRoughRangedAttackMod();
-		if(!noDefensiveBonus())
-		{
-			iExtra *= 2;
-		}
-		iValue += iTemp + iExtra + iFlavorRanged;
+		iExtra = getExtraRoughAttackPercent();
+		iExtra = (iTemp + iExtra) * (iFlavorOffense + 2 * iFlavorDefense);
+		iExtra *= 0.3;
+		iValue += iExtra;
 	}
+
 
 	iTemp = pkPromotionInfo->GetRoughDefensePercent();    
 	// M: +10 Woodsman.			// Shouldn't this be just forest?
@@ -30495,10 +30493,10 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		iExtra = getExtraRoughDefensePercent();
 
 		iExtra = (iTemp + iExtra) * (2 * iFlavorOffense + iFlavorDefense);
-		iExtra *= 0.5;
+		iExtra *= 0.3;
 		if(noDefensiveBonus())
 		{
-			iExtra /= 5;
+			iExtra /= 2;
 		}
 		iValue += iExtra;
 	}
@@ -30527,9 +30525,9 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		iExtra = getExtraAttackAboveHealthMod();
 		iExtra = ( iTemp + iExtra ) * ( iFlavorDefense + 2 * iFlavorCityDefense);
 		if (isRanged())
-			iExtra *= 0.6;
+			iExtra *= 0.5;
 		else
-			iExtra *= 0.3;
+			iExtra *= 0.2;
 		iValue += iExtra;
 	}
 	iTemp = pkPromotionInfo->GetAttackBelowHealthMod();
@@ -30542,7 +30540,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		if (isRanged())
 			iExtra *= 0.5;		// Had to artificially increase this as barrage sucks
 		else
-			iExtra *= 0.4;
+			iExtra *= 0.3;
 		if (noDefensiveBonus())
 			iExtra *= 1.5;
 		iValue += iExtra;
@@ -30558,6 +30556,8 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 			iExtra *= 0.5;
 		else
 			iExtra *= 0.4;
+		if (noDefensiveBonus())
+			iExtra *= 1.5;
 		iValue += iExtra;
 	}
 
