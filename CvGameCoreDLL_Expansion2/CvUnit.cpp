@@ -30954,7 +30954,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 	{
 		iExtra = (iFlavorMobile * 2 + iFLavorOffense);
 		iExtra *= 4;
-		iExtra *= maxMoves()
+		iExtra *= maxMoves();
 		iValue += iExtra;	
 	}
 
