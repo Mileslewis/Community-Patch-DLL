@@ -576,9 +576,6 @@ public:
 	// Threat Levels
 	// ------------------------------------
 
-	ThreatTypes GetMilitaryThreat(PlayerTypes ePlayer) const;
-	void SetMilitaryThreat(PlayerTypes ePlayer, ThreatTypes eMilitaryThreat);
-
 	ThreatTypes GetWarmongerThreat(PlayerTypes ePlayer) const;
 	void SetWarmongerThreat(PlayerTypes ePlayer, ThreatTypes eWarmongerThreat);
 
@@ -856,6 +853,12 @@ public:
 	int GetPlunderedTradeRouteTurn(PlayerTypes ePlayer) const;
 	void SetPlunderedTradeRouteTurn(PlayerTypes ePlayer, int iTurn);
 
+	int GetBeatenToWonderTurn(PlayerTypes ePlayer) const;
+	void SetBeatenToWonderTurn(PlayerTypes ePlayer, int iTurn);
+
+	int GetLoweredOurInfluenceTurn(PlayerTypes ePlayer) const;
+	void SetLoweredOurInfluenceTurn(PlayerTypes ePlayer, int iTurn);
+
 	int GetOtherPlayerSidedWithProtectedMinorTurn(PlayerTypes ePlayer) const;
 	void SetOtherPlayerSidedWithProtectedMinorTurn(PlayerTypes ePlayer, int iTurn);
 	bool IsAngryAboutSidedWithProtectedMinor(PlayerTypes ePlayer) const;
@@ -1055,8 +1058,6 @@ public:
 	int ComputeAverageMajorMilitaryRating(PlayerTypes eExcludedPlayer = NO_PLAYER);
 
 	void DoUpdatePlayerEconomicStrengths();
-
-	void DoUpdateMilitaryThreats();
 
 	void DoUpdateWarmongerThreats(bool bUpdateOnly = false);
 
@@ -1512,10 +1513,14 @@ public:
 	bool IsWantToLiberateVassal(PlayerTypes ePlayer) const;
 	int GetMasterLiberatedMeFromVassalageScore(PlayerTypes ePlayer) const;
 
-	bool IsVassalageAcceptable(PlayerTypes ePlayer, bool bWar = false);
+	bool IsVassalageAcceptable(PlayerTypes ePlayer);
+	bool IsCapitulationAcceptable(PlayerTypes ePlayer);
+	bool IsVoluntaryVassalageAcceptable(PlayerTypes ePlayer);
 
-	bool IsEndVassalageAcceptable(PlayerTypes ePlayer);
-	bool IsEndVassalageRequestAcceptable(PlayerTypes eHuman);
+	bool IsEndVassalageAcceptable(PlayerTypes ePlayer); // can be called in either direction, for the master or the vassal
+	bool IsEndVassalageWithPlayerAcceptable(PlayerTypes ePlayer); // vassal only, evaluates one master
+	bool IsEndVassalageRequestAcceptable(PlayerTypes ePlayer); // master only, evaluates one vassal
+
 	void DoBecomeVassalageStatement(PlayerTypes ePlayer, DiploStatementTypes& eStatement, CvDeal* pDeal);
 	void DoMakeVassalageStatement(PlayerTypes ePlayer, DiploStatementTypes& eStatement, CvDeal* pDeal);
 	void DoEndVassalageStatement(PlayerTypes ePlayer, DiploStatementTypes& eStatement);
@@ -1533,12 +1538,6 @@ public:
 
 	void DoWeMadeVassalageWithSomeone(TeamTypes eTeam, bool bVoluntary);
 	void DoWeEndedVassalageWithSomeone(TeamTypes eTeam);
-
-	//GlobalStateTypes GetGlobalState(PlayerTypes ePlayer) const;
-	//void SetGlobalState(PlayerTypes ePlayer, GlobalStateTypes eGlobalState);
-
-	//void DoUpdateGlobalStates();
-	//void DoUpdateGlobalStateForOnePlayer(PlayerTypes ePlayer);
 #endif
 #if defined(MOD_DIPLOMACY_CIV4_FEATURES)
 	MoveTroopsResponseTypes GetMoveTroopsRequestResponse(PlayerTypes ePlayer, bool bJustChecking = false);
@@ -1807,7 +1806,6 @@ private:
 	void LogMinorCivQuestType(CvString& strString, MinorCivQuestTypes eQuestType);
 	void LogOpinion(CvString& strString, PlayerTypes ePlayer);
 	void LogWarmongerThreat(CvString& strString, PlayerTypes ePlayer);
-	void LogMilitaryThreat(CvString& strString, PlayerTypes ePlayer);
 	void LogMilitaryStrength(CvString& strString, PlayerTypes ePlayer);
 	void LogTargetValue(CvString& strString, PlayerTypes ePlayer);
 	void LogEconomicStrength(CvString& strString, PlayerTypes ePlayer);
@@ -1830,12 +1828,6 @@ private:
 	void LogStatementToPlayer(PlayerTypes ePlayer, DiploStatementTypes eMessage);
 
 	CvPlayer* m_pPlayer;
-
-#if defined(MOD_DIPLOMACY_CIV4_FEATURES)
-	bool IsCapitulationAcceptable(PlayerTypes ePlayer);
-	bool IsVoluntaryVassalageAcceptable(PlayerTypes ePlayer);
-	//void LogGlobalState(CvString& strString, PlayerTypes ePlayer);
-#endif
 
 	// ************************************
 	// Memory Values
@@ -1977,7 +1969,6 @@ private:
 	char m_aePolicyBlockLevel[MAX_MAJOR_CIVS];
 
 	// Threat Levels
-	char m_aeMilitaryThreat[MAX_MAJOR_CIVS];
 	char m_aeWarmongerThreat[MAX_MAJOR_CIVS];
 
 	// Strength Assessments
@@ -2074,6 +2065,8 @@ private:
 	int m_aiLandmarksBuiltForMeTurn[MAX_MAJOR_CIVS];
 	int m_aiPlottedAgainstUsTurn[MAX_MAJOR_CIVS];
 	int m_aiPlunderedTradeRouteTurn[MAX_MAJOR_CIVS];
+	int m_aiBeatenToWonderTurn[MAX_MAJOR_CIVS];
+	int m_aiLoweredOurInfluenceTurn[MAX_MAJOR_CIVS];
 	int m_aiSidedWithProtectedMinorTurn[MAX_MAJOR_CIVS];
 	int m_aiBulliedProtectedMinorTurn[MAX_MAJOR_CIVS];
 	int m_aiAttackedProtectedMinorTurn[MAX_MAJOR_CIVS];
@@ -2142,11 +2135,11 @@ private:
 
 namespace CvDiplomacyAIHelpers
 {
-	int GetWarmongerOffset(CvCity* pCity = NULL, PlayerTypes eWarmonger = NO_PLAYER, PlayerTypes ePlayer = NO_PLAYER, WarmongerTriggerTypes eWarmongerTrigger = NO_WARMONGER_TRIGGER_TYPE);
+	int GetWarmongerOffset(CvCity* pCity = NULL, PlayerTypes eWarmonger = NO_PLAYER, PlayerTypes ePlayer = NO_PLAYER, TeamTypes eDefendingTeam = NO_TEAM, WarmongerTriggerTypes eWarmongerTrigger = NO_WARMONGER_TRIGGER_TYPE);
 	CvString GetWarmongerPreviewString(PlayerTypes eCurrentOwner = NO_PLAYER, CvCity* pCity = NULL, PlayerTypes eActivePlayer = NO_PLAYER);
 	CvString GetLiberationPreviewString(PlayerTypes eOriginalOwner = NO_PLAYER, CvCity* pCity = NULL, PlayerTypes eActivePlayer = NO_PLAYER);
 	void ApplyWarmongerPenalties(PlayerTypes eConqueror, PlayerTypes eConquered, CvCity* pCity);
-	int GetPlayerCaresValue(PlayerTypes eConqueror, PlayerTypes eConquered, CvCity* pCity, PlayerTypes eCaringPlayer, bool bLiberation = false);
+	int GetPlayerCaresValue(PlayerTypes eCityTaker, PlayerTypes eCityOwner, CvCity* pCity, PlayerTypes eCaringPlayer, bool bLiberation = false);
 }
 
 #endif //CIV5_AI_DIPLOMACY_H

@@ -1317,7 +1317,7 @@ int CvDealAI::GetTradeItemValue(TradeableItems eItem, bool bFromMe, PlayerTypes 
 	else if(MOD_DIPLOMACY_CIV4_FEATURES && eItem == TRADE_ITEM_TECHS)
 		iItemValue = GetTechValue(/*TechType*/ (TechTypes) iData1, bFromMe, eOtherPlayer);
 	else if(MOD_DIPLOMACY_CIV4_FEATURES && eItem == TRADE_ITEM_VASSALAGE)
-		iItemValue = GetVassalageValue(bFromMe, eOtherPlayer, GET_TEAM(GetPlayer()->getTeam()).isAtWar(GET_PLAYER(eOtherPlayer).getTeam()));
+		iItemValue = GetVassalageValue(bFromMe, eOtherPlayer);
 	else if(MOD_DIPLOMACY_CIV4_FEATURES && eItem == TRADE_ITEM_VASSALAGE_REVOKE)
 		iItemValue = GetRevokeVassalageValue(bFromMe, eOtherPlayer, GET_TEAM(GetPlayer()->getTeam()).isAtWar(GET_PLAYER(eOtherPlayer).getTeam()));
 #endif
@@ -2015,7 +2015,7 @@ int CvDealAI::GetStrategicResourceValue(ResourceTypes eResource, int iResourceQu
 			}
 
 			//greatly increase this if we're at a deficit of resources.
-			iItemValue *= max(1, GetPlayer()->getResourceOverValue(eResource));
+			iItemValue *= max(1, GetPlayer()->getResourceShortageValue(eResource));
 
 			//And now speed/quantity.
 			iItemValue *= (iResourceQuantity*iNumTurns);
@@ -5821,7 +5821,7 @@ void CvDealAI::DoAddItemsToDealForPeaceTreaty(PlayerTypes eOtherPlayer, CvDeal* 
 	pDeal->SetSurrenderingPlayer(eLosingPlayer);
 	int iWarScore = pLosingPlayer->GetDiplomacyAI()->GetWarScore(eWinningPlayer);
 #if defined(MOD_DIPLOMACY_CIV4_FEATURES)
-	bool bBecomeMyVassal = pLosingPlayer->GetDiplomacyAI()->IsVassalageAcceptable(eWinningPlayer, true);
+	bool bBecomeMyVassal = pLosingPlayer->GetDiplomacyAI()->IsVassalageAcceptable(eWinningPlayer);
 	bool bRevokeMyVassals = false;
 	// Reduce war score if losing player wants to become winning player's vassal
 	if(MOD_DIPLOMACY_CIV4_FEATURES && bBecomeMyVassal)
@@ -6344,8 +6344,7 @@ bool CvDealAI::IsMakeOfferForStrategicResource(PlayerTypes eOtherPlayer, CvDeal*
 
 	// Don't ask for a Luxury if we're hostile or planning a war
 	MajorCivApproachTypes eApproach = GetPlayer()->GetDiplomacyAI()->GetMajorCivApproach(eOtherPlayer);
-	if(eApproach == MAJOR_CIV_APPROACH_HOSTILE ||
-	        eApproach == MAJOR_CIV_APPROACH_WAR)
+	if(eApproach == MAJOR_CIV_APPROACH_HOSTILE || eApproach == MAJOR_CIV_APPROACH_WAR)
 	{
 		return false;
 	}
@@ -6354,17 +6353,23 @@ bool CvDealAI::IsMakeOfferForStrategicResource(PlayerTypes eOtherPlayer, CvDeal*
 
 	// precalculate, it's expensive
 	int iCurrentNetGoldOfReceivingPlayer = m_pPlayer->GetTreasury()->CalculateBaseNetGold();
+
 	// See if the other player has a Resource to trade
 	for(int iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
 	{
 		ResourceTypes eResource = (ResourceTypes) iResourceLoop;
 
-		// Only look at Strats
+		// Only look at strategic resources here
 		const CvResourceInfo* pkResourceInfo = GC.getResourceInfo(eResource);
 		if(pkResourceInfo == NULL || pkResourceInfo->getResourceUsage() != RESOURCEUSAGE_STRATEGIC)
 			continue;
 
-		if (GetPlayer()->getNumResourceAvailable(eResource, false) > 2)
+		// If we have some to spare, don't get more
+		if (GetPlayer()->getNumResourceAvailable(eResource, true) > 2)
+			continue;
+		
+		// If we use a lot already, don't get more
+		if (GetPlayer()->getNumResourceUsed(eResource) > GetPlayer()->getNumCities()*2)
 			continue;
 
 		//don't buy more if we're already exporting it
@@ -6391,7 +6396,8 @@ bool CvDealAI::IsMakeOfferForStrategicResource(PlayerTypes eOtherPlayer, CvDeal*
 		int iAvailable = GET_PLAYER(eOtherPlayer).getNumResourceAvailable(eStratFromThem, false);
 		int iDesired = min(4,max(1,iAvailable/2));
 		iDesired += GC.getGame().getSmallFakeRandNum(3, iCurrentNetGoldOfReceivingPlayer + eStratFromThem + eOtherPlayer);
-		iDesired += GetPlayer()->getResourceOverValue(eStratFromThem);
+		//if we are in the red we want more!
+		iDesired += GetPlayer()->getResourceShortageValue(eStratFromThem);
 		iDesired = min(iAvailable, iDesired);
 
 		// Can we actually complete this deal?
@@ -7785,7 +7791,7 @@ int CvDealAI::GetTechValue(TechTypes eTech, bool bFromMe, PlayerTypes eOtherPlay
 }
 
 /// How much is Vassalage worth?
-int CvDealAI::GetVassalageValue(bool bFromMe, PlayerTypes eOtherPlayer, bool bWar)
+int CvDealAI::GetVassalageValue(bool bFromMe, PlayerTypes eOtherPlayer)
 {
 	CvAssertMsg(GetPlayer()->GetID() != eOtherPlayer, "DEAL_AI: Trying to check value of a Vassalage Agreement with oneself. Please send Jon this with your last 5 autosaves and what changelist # you're playing.");
 
@@ -7798,7 +7804,7 @@ int CvDealAI::GetVassalageValue(bool bFromMe, PlayerTypes eOtherPlayer, bool bWa
 
 	if (bFromMe)
 	{
-		if (!m_pDiploAI->IsVassalageAcceptable(eOtherPlayer, bWar))
+		if (!m_pDiploAI->IsVassalageAcceptable(eOtherPlayer))
 		{
 			return INT_MAX;
 		}
@@ -7806,7 +7812,7 @@ int CvDealAI::GetVassalageValue(bool bFromMe, PlayerTypes eOtherPlayer, bool bWa
 		// Initial Vassalage deal value at 2000
 		iItemValue = 2000;
 
-		if (bWar)
+		if (m_pPlayer->IsAtWarWith(eOtherPlayer))
 		{
 			return (iItemValue / 2);
 		}
@@ -7838,7 +7844,7 @@ int CvDealAI::GetVassalageValue(bool bFromMe, PlayerTypes eOtherPlayer, bool bWa
 		case STRENGTH_WEAK:
 		case STRENGTH_PATHETIC:
 		default:
-			if (bWar)
+			if (m_pPlayer->IsAtWarWith(eOtherPlayer))
 			{
 				iItemValue *= 100;
 			}
@@ -7903,7 +7909,7 @@ int CvDealAI::GetVassalageValue(bool bFromMe, PlayerTypes eOtherPlayer, bool bWa
 	else
 	{
 		//they don't want to do it?
-		if (!GET_PLAYER(eOtherPlayer).isHuman() && !GET_PLAYER(eOtherPlayer).GetDiplomacyAI()->IsVassalageAcceptable(m_pPlayer->GetID(), bWar))
+		if (!GET_PLAYER(eOtherPlayer).isHuman() && !GET_PLAYER(eOtherPlayer).GetDiplomacyAI()->IsVassalageAcceptable(m_pPlayer->GetID()))
 		{
 			return INT_MAX;
 		}
@@ -7911,7 +7917,7 @@ int CvDealAI::GetVassalageValue(bool bFromMe, PlayerTypes eOtherPlayer, bool bWa
 		// Initial Vassalage deal value at 1000
 		iItemValue = 1000;
 
-		if (bWar)
+		if (m_pPlayer->IsAtWarWith(eOtherPlayer))
 		{
 			return (iItemValue / 2);
 		}
@@ -8395,7 +8401,12 @@ bool CvDealAI::IsMakeOfferForVassalage(PlayerTypes eOtherPlayer, CvDeal* pDeal)
 		return false;
 	}
 
-	if(!GET_PLAYER(eOtherPlayer).GetDiplomacyAI()->IsVassalageAcceptable(GetPlayer()->GetID(), false))
+	if (m_pPlayer->IsAtWarWith(eOtherPlayer))
+	{
+		return false;
+	}
+
+	if(!GET_PLAYER(eOtherPlayer).GetDiplomacyAI()->IsVassalageAcceptable(GetPlayer()->GetID()))
 	{
 		return false;
 	}
@@ -8429,7 +8440,12 @@ bool CvDealAI::IsMakeOfferToBecomeVassal(PlayerTypes eOtherPlayer, CvDeal* pDeal
 		return false;
 	}
 
-	if (!GetPlayer()->GetDiplomacyAI()->IsVassalageAcceptable(eOtherPlayer, false))
+	if (m_pPlayer->IsAtWarWith(eOtherPlayer))
+	{
+		return false;
+	}
+
+	if (!GetPlayer()->GetDiplomacyAI()->IsVassalageAcceptable(eOtherPlayer))
 	{
 		return false;
 	}
@@ -8503,7 +8519,7 @@ bool CvDealAI::IsMakeOfferForRevokeVassalage(PlayerTypes eOtherPlayer, CvDeal* p
 						{
 							bWorthIt = true;
 						}
-						if (!GET_PLAYER(eVassalPlayer).GetDiplomacyAI()->IsEndVassalageAcceptable(eOtherPlayer))
+						if (!GET_PLAYER(eVassalPlayer).GetDiplomacyAI()->IsEndVassalageWithPlayerAcceptable(eOtherPlayer))
 						{
 							bValid = false;
 							break;
