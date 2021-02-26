@@ -11262,6 +11262,15 @@ void CvPlayer::doTurn()
 		{
 			DoDiversity((DomainTypes)i);
 		}
+#if defined(MOD_BALANCE_CORE_DIFFICULTY)
+		if (MOD_BALANCE_CORE_DIFFICULTY && !isHuman() && isMajorCiv() && getNumCities() > 0)
+		{
+			if ((GC.getGame().getElapsedGameTurns() % 10) == 0)
+			{
+				DoDifficultyBonus(HISTORIC_EVENT_GA);
+			}
+		}
+#endif
 
 		RefreshCSAlliesFriends();
 		UpdateHappinessFromMinorCivs();
@@ -16405,11 +16414,23 @@ int CvPlayer::getProductionNeeded(UnitTypes eUnit) const
 	iProductionNeeded /= 100;
 #endif
 
-	if (!isHuman() && !isBarbarian() && bCombat)
+	if (!isHuman() && !isBarbarian())
 	{
-		if (isWorldUnitClass(eUnitClass))
+		if (bCombat)
 		{
-			iProductionNeeded *= GC.getGame().getHandicapInfo().getAIWorldTrainPercent();
+			if (isWorldUnitClass(eUnitClass))
+			{
+				iProductionNeeded *= GC.getGame().getHandicapInfo().getAIWorldTrainPercent();
+				iProductionNeeded /= 100;
+			}
+			else
+			{
+				iProductionNeeded *= GC.getGame().getHandicapInfo().getAITrainPercent();
+				iProductionNeeded /= 100;
+			}
+
+			
+			iProductionNeeded *= std::max(0, ((GC.getGame().getHandicapInfo().getAIPerEraModifier() * GetCurrentEra()) + 100));
 			iProductionNeeded /= 100;
 		}
 		else
@@ -16417,9 +16438,8 @@ int CvPlayer::getProductionNeeded(UnitTypes eUnit) const
 			iProductionNeeded *= GC.getGame().getHandicapInfo().getAITrainPercent();
 			iProductionNeeded /= 100;
 		}
+	
 
-		iProductionNeeded *= std::max(0, ((GC.getGame().getHandicapInfo().getAIPerEraModifier() * GetCurrentEra()) + 100));
-		iProductionNeeded /= 100;
 	}
 
 	iProductionNeeded += getUnitExtraCost(eUnitClass);
@@ -18327,6 +18347,15 @@ int CvPlayer::calculateResearchModifier(TechTypes eTech)
 		iModifier /= 100;
 	}
 
+	if (!isHuman())
+	{
+		iModifier *= 100;
+		iModifier /= std::max(1, GC.getGame().getHandicapInfo().getAIGrowthPercent());
+		iModifier *= 100;
+		iModifier /= std::max(1, 100 + (GC.getGame().getHandicapInfo().getAIPerEraModifier() * GC.getGame().getCurrentEra()));
+
+	}
+
 	return iModifier;
 }
 
@@ -20012,7 +20041,7 @@ void CvPlayer::DoWarVictoryBonuses()
 }
 void CvPlayer::DoDifficultyBonus(HistoricEventTypes eHistoricEvent)
 {
-	int iEra = GC.getGame().getCurrentEra();
+	int iEra = GC.getGame().getCurrentEra() + 1;
 	if (iEra <= 0)
 	{
 		iEra = 1;
@@ -20022,7 +20051,8 @@ void CvPlayer::DoDifficultyBonus(HistoricEventTypes eHistoricEvent)
 	int iHandicapB = 0;
 	int iHandicapC = 0;
 	int iYieldHandicap = 0;
-	int iLoop;
+	int iYieldHandicapSmall = 0;
+	//int iLoop;
 
 	CvString strLogString;
 
@@ -20034,164 +20064,35 @@ void CvPlayer::DoDifficultyBonus(HistoricEventTypes eHistoricEvent)
 		iHandicapB = pHandicapInfo->getAIDifficultyBonusMid();
 		iHandicapC = pHandicapInfo->getAIDifficultyBonusLate();
 		iYieldHandicap = iHandicapBase * ((iHandicapC * iEra * iEra) + (iHandicapB * iEra) + iHandicapA) / 100;
-
-		iYieldHandicap *= GC.getGame().getGameSpeedInfo().getInstantYieldPercent();
-		iYieldHandicap /= 100;
+		iYieldHandicapSmall = iYieldHandicap / 10;
+		//iYieldHandicap *= GC.getGame().getGameSpeedInfo().getInstantYieldPercent();
+		//iYieldHandicap /= 100;
 	}
-	int iYieldForCities = max(1, iYieldHandicap / max(1, getNumCities()));
+	//int iYieldForCities = max(1, iYieldHandicap / max(1, getNumCities()));
 	if (iYieldHandicap > 0)
 	{
 		switch (eHistoricEvent)
 		{
-			case HISTORIC_EVENT_ERA:
-			{
-				iYieldHandicap *= 3;
-				for (CvCity* pLoopCity = firstCity(&iLoop); pLoopCity != NULL; pLoopCity = nextCity(&iLoop))
-				{
-					if (pLoopCity != NULL)
-					{
-						pLoopCity->changeFood(iYieldForCities);
-						pLoopCity->changeProduction(iYieldForCities);
-					}
-				}
-				GetTreasury()->ChangeGold(iYieldHandicap);
-				ChangeGoldenAgeProgressMeter(iYieldHandicap);
-				changeJONSCulture(iYieldHandicap);
 
-				TechTypes eCurrentTech = GetPlayerTechs()->GetCurrentResearch();
-				if (eCurrentTech == NO_TECH)
-				{
-					changeOverflowResearch(iYieldHandicap);
-				}
-				else
-				{
-					GET_TEAM(getTeam()).GetTeamTechs()->ChangeResearchProgress(eCurrentTech, iYieldHandicap, GetID());
-				}
-				strLogString.Format("CBP AI DIFFICULTY BONUS FROM HISTORIC EVENT: ERA - Received Handicap Bonus (%d in Yields): FOOD, PRODUCTION, GOLD, GAP, CULTURE, SCIENCE.", iYieldHandicap);
-				break;
-			}
-			case HISTORIC_EVENT_WONDER:
-			{
-				GetTreasury()->ChangeGold(iYieldHandicap);
-				ChangeGoldenAgeProgressMeter(iYieldHandicap);
-				strLogString.Format("CBP AI DIFFICULTY BONUS FROM HISTORIC EVENT: WONDER - Received Handicap Bonus (%d in Yields): GOLD, GAP.", iYieldHandicap);
-				break;
-			}
-			case HISTORIC_EVENT_GP:
-			{
-				GetTreasury()->ChangeGold(iYieldHandicap);
-				ChangeGoldenAgeProgressMeter(iYieldHandicap);
-				strLogString.Format("CBP AI DIFFICULTY BONUS FROM HISTORIC EVENT: GREAT PERSON - Received Handicap Bonus (%d in Yields): GOLD, GAP.", iYieldHandicap);
-				break;
-			}
-			case HISTORIC_EVENT_WAR:
-			{
-				for (CvCity* pLoopCity = firstCity(&iLoop); pLoopCity != NULL; pLoopCity = nextCity(&iLoop))
-				{
-					if (pLoopCity != NULL)
-					{
-						pLoopCity->changeFood(iYieldForCities);
-						pLoopCity->changeProduction(iYieldForCities);
-					}
-				}
-				GetTreasury()->ChangeGold(iYieldHandicap);
-				ChangeGoldenAgeProgressMeter(iYieldHandicap);
-				changeJONSCulture(iYieldHandicap);
+		case HISTORIC_EVENT_GA:
+		{
 
-				TechTypes eCurrentTech = GetPlayerTechs()->GetCurrentResearch();
-				if (eCurrentTech == NO_TECH)
-				{
-					changeOverflowResearch(iYieldHandicap);
-				}
-				else
-				{
-					GET_TEAM(getTeam()).GetTeamTechs()->ChangeResearchProgress(eCurrentTech, iYieldHandicap, GetID());
-				}
-				strLogString.Format("CBP AI DIFFICULTY BONUS FROM HISTORIC EVENT: WAR - Received Handicap Bonus (%d in Yields): FOOD, PRODUCTION, GOLD, GAP, CULTURE, SCIENCE.", iYieldHandicap);
-				break;
-			}
-			case HISTORIC_EVENT_GA:
+			GetTreasury()->ChangeGold(iYieldHandicap);
+			changeJONSCulture(iYieldHandicapSmall);
+			TechTypes eCurrentTech = GetPlayerTechs()->GetCurrentResearch();
+			if (eCurrentTech == NO_TECH)
 			{
-				for (CvCity* pLoopCity = firstCity(&iLoop); pLoopCity != NULL; pLoopCity = nextCity(&iLoop))
-				{
-					if (pLoopCity != NULL)
-					{
-						pLoopCity->changeFood(iYieldForCities);
-						pLoopCity->changeProduction(iYieldForCities);
-					}
-				}
-				GetTreasury()->ChangeGold(iYieldHandicap);
-				changeJONSCulture(iYieldHandicap);
+				changeOverflowResearch(iYieldHandicapSmall);
+			}
+			else
+			{
+				GET_TEAM(getTeam()).GetTeamTechs()->ChangeResearchProgress(eCurrentTech, iYieldHandicapSmall, GetID());
+			}
 
-				TechTypes eCurrentTech = GetPlayerTechs()->GetCurrentResearch();
-				if (eCurrentTech == NO_TECH)
-				{
-					changeOverflowResearch(iYieldHandicap);
-				}
-				else
-				{
-					GET_TEAM(getTeam()).GetTeamTechs()->ChangeResearchProgress(eCurrentTech, iYieldHandicap, GetID());
-				}
-				strLogString.Format("CBP AI DIFFICULTY BONUS FROM HISTORIC EVENT: GOLDEN AGE - Received Handicap Bonus (%d in Yields): FOOD, PRODUCTION, GOLD, CULTURE, SCIENCE.", iYieldHandicap);
-				break;
-			}
-			case HISTORIC_EVENT_DIG:
-			{
-				GetTreasury()->ChangeGold(iYieldHandicap);
-				strLogString.Format("CBP AI DIFFICULTY BONUS FROM HISTORIC EVENT: DIG - Received Handicap Bonus (%d in Yields): GOLD.", iYieldHandicap);
-				break;
-			}
-			case HISTORIC_EVENT_TRADE_CS:
-			{
-				GetTreasury()->ChangeGold(iYieldHandicap);
-				strLogString.Format("CBP AI DIFFICULTY BONUS FROM HISTORIC EVENT: TRADE (CITY-STATE) - Received Handicap Bonus (%d in Yields): GOLD.", iYieldHandicap);
-				break;
-			}
-			case HISTORIC_EVENT_TRADE_LAND:
-			{
-				GetTreasury()->ChangeGold(iYieldHandicap);
-				strLogString.Format("CBP AI DIFFICULTY BONUS FROM HISTORIC EVENT: TRADE (LAND) - Received Handicap Bonus (%d in Yields): GOLD.", iYieldHandicap);
-				break;
-			}
-			case HISTORIC_EVENT_TRADE_SEA:
-			{
-				GetTreasury()->ChangeGold(iYieldHandicap);
-				strLogString.Format("CBP AI DIFFICULTY BONUS FROM HISTORIC EVENT: TRADE (SEA) - Received Handicap Bonus (%d in Yields): GOLD.", iYieldHandicap);
-				break;
-			}
-			case HISTORIC_EVENT_CITY_FOUND_CAPITAL:
-			{
-				GetTreasury()->ChangeGold(iYieldHandicap);
-				ChangeGoldenAgeProgressMeter(iYieldHandicap);
-				strLogString.Format("CBP AI DIFFICULTY BONUS FROM HISTORIC EVENT: FOUND CAPITAL - Received Handicap Bonus (%d in Yields): GOLD, GAP.", iYieldHandicap);
-				break;
-			}
-			case HISTORIC_EVENT_CITY_FOUND:
-			{
-				for (CvCity* pLoopCity = firstCity(&iLoop); pLoopCity != NULL; pLoopCity = nextCity(&iLoop))
-				{
-					if (pLoopCity != NULL)
-					{
-						pLoopCity->changeFood(iYieldForCities);
-						pLoopCity->changeProduction(iYieldForCities);
-					}
-				}
-				GetTreasury()->ChangeGold(iYieldHandicap);
-				ChangeGoldenAgeProgressMeter(iYieldHandicap);
-				changeJONSCulture(iYieldHandicap);
+			strLogString.Format("CBP AI DIFFICULTY BONUS FROM HISTORIC EVENT: GOLDEN AGE - Received Handicap Bonus (%d in Yields): FOOD, PRODUCTION, GOLD, CULTURE, SCIENCE.", iYieldHandicap);
+			break;
+		}
 
-				TechTypes eCurrentTech = GetPlayerTechs()->GetCurrentResearch();
-				if (eCurrentTech == NO_TECH)
-				{
-					changeOverflowResearch(iYieldHandicap);
-				}
-				else
-				{
-					GET_TEAM(getTeam()).GetTeamTechs()->ChangeResearchProgress(eCurrentTech, iYieldHandicap, GetID());
-				}
-				strLogString.Format("CBP AI DIFFICULTY BONUS FROM HISTORIC EVENT: FOUND CITY - Received Handicap Bonus (%d in Yields): FOOD, PRODUCTION, GOLD, GAP, CULTURE, SCIENCE.", iYieldHandicap);
-				break;
-			}
 		}
 	}
 
@@ -25323,6 +25224,12 @@ int CvPlayer::GetGoldenAgeProgressThreshold() const
 	int iVisibleDivisor = /*5*/ GC.getGOLDEN_AGE_VISIBLE_THRESHOLD_DIVISOR();
 	iThreshold /= iVisibleDivisor;
 	iThreshold *= iVisibleDivisor;
+
+	if (!isHuman())
+	{
+		iThreshold *= GC.getGame().getHandicapInfo().getAIGrowthPercent();
+		iThreshold /= 100;
+	}
 
 	return iThreshold;
 }
@@ -46985,6 +46892,11 @@ int CvPlayer::getNewCityProductionValue() const
 	CvGame& kGame = GC.getGame();
 
 	iValue += (GC.getADVANCED_START_CITY_COST() * kGame.getGameSpeedInfo().getGrowthPercent()) / 100;
+	if (!isHuman() && !isBarbarian() && GetNumCitiesFounded() > 1)
+	{
+		iValue *= GC.getGame().getHandicapInfo().getAIGrowthPercent();
+		iValue /= 100;
+	}
 
 	int iPopulation = GC.getINITIAL_CITY_POPULATION() + kGame.getStartEraInfo().getFreePopulation();
 	for(int i = 1; i <= iPopulation; ++i)
