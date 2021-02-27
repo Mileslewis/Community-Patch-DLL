@@ -20065,7 +20065,7 @@ void CvPlayer::DoDifficultyBonus(HistoricEventTypes eHistoricEvent)
 		iHandicapB = pHandicapInfo->getAIDifficultyBonusMid();
 		iHandicapC = pHandicapInfo->getAIDifficultyBonusLate();
 		iYieldHandicap = iHandicapBase * ((iHandicapC * iEra * iEra) + (iHandicapB * iEra) + iHandicapA) / 100;
-		iYieldHandicapSmall = iYieldHandicap / 10;
+		iYieldHandicapSmall = iYieldHandicap / 8;
 		//iYieldHandicap *= GC.getGame().getGameSpeedInfo().getInstantYieldPercent();
 		//iYieldHandicap /= 100;
 	}
@@ -46879,7 +46879,7 @@ int CvPlayer::getNewCityProductionValue() const
 	CvGame& kGame = GC.getGame();
 
 	iValue += (GC.getADVANCED_START_CITY_COST() * kGame.getGameSpeedInfo().getGrowthPercent()) / 100;
-	if (!isHuman() && !isBarbarian() && GetNumCitiesFounded() > 1)
+	if (!isHuman() && !isBarbarian())
 	{
 		iValue *= GC.getGame().getHandicapInfo().getAIGrowthPercent();
 		iValue /= 100;
