@@ -46892,7 +46892,7 @@ int CvPlayer::getNewCityProductionValue() const
 	CvGame& kGame = GC.getGame();
 
 	iValue += (GC.getADVANCED_START_CITY_COST() * kGame.getGameSpeedInfo().getGrowthPercent()) / 100;
-	if (!isHuman() && !isBarbarian())
+	if (!isHuman() && !isBarbarian() && GetNumCitiesFounded() > 1)
 	{
 		iValue *= GC.getGame().getHandicapInfo().getAIGrowthPercent();
 		iValue /= 100;
