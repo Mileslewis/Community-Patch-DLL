@@ -7896,11 +7896,15 @@ bool CvDealAI::IsMakeOfferForVassalage(PlayerTypes eOtherPlayer, CvDeal* pDeal)
 		return false;
 	}
 
-	if (m_pPlayer->IsAtWarWith(eOtherPlayer))
+	if (m_pPlayer->IsAtWar())
 	{
 		return false;
 	}
 
+	if (GET_PLAYER(eOtherPlayer).IsAtWar())
+	{
+		return false;
+	}
 	if(!GET_PLAYER(eOtherPlayer).GetDiplomacyAI()->IsVassalageAcceptable(GetPlayer()->GetID()))
 	{
 		return false;
