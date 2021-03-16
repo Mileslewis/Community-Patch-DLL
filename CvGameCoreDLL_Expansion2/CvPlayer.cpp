@@ -18353,7 +18353,7 @@ int CvPlayer::calculateResearchModifier(TechTypes eTech)
 		iModifier *= 100;
 		iModifier /= std::max(1, GC.getGame().getHandicapInfo().getAIGrowthPercent());
 		iModifier *= 100;
-		iModifier /= std::max(1, 100 + (GC.getGame().getHandicapInfo().getAIPerEraModifier() * GC.getGame().getCurrentEra()));
+		iModifier /= std::max(1, 100 + (GC.getGame().getHandicapInfo().getAIPerEraModifier() * GetCurrentEra()));
 
 	}
 
