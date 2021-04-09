@@ -11438,7 +11438,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 				
 			}
 		}
-		int iProductionMightPercent = (iOurProductionMight * 100) / iHighestProduction;
+		int iProductionMightPercent = (iOurProductionMight * 100) / max(1, iHighestProduction);
 		bool bCanGold = iProductionMightPercent >= 80;
 		if (bCanGold)
 		{
@@ -11545,7 +11545,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 				}
 			}
 			// Gives a percent we are above or below global mean techs
-			int iTechPercent = ((iOurTechs * iTeams * 100) / iTotalTechs) - 100;
+			int iTechPercent = ((iOurTechs * iTeams * 100) / max(1, iTotalTechs)) - 100;
 
 			if (bCanGold)
 			{
@@ -11566,7 +11566,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 			if (bCanGold)
 			{
 				int iOurSeaMight = GetPlayer()->GetMilitarySeaMight();
-				int iHighestSeaMight = 0;
+				int iHighestSeaMight = 1;
 				for (int i = 0; i < MAX_MAJOR_CIVS; i++)
 				{
 					PlayerTypes e = (PlayerTypes)i;
@@ -11580,8 +11580,8 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 						}
 					}
 				}
-				int iSeaMightPercent = (iOurSeaMight * 100) / iHighestSeaMight;
-				iExtra += (iPercentofWinning * iSeaMightPercent) / 5;
+				int iSeaMightPercent = (iOurSeaMight * 100) / max(1, iHighestSeaMight);
+				iExtra += (iPercentofWinning * iSeaMightPercent) / 6;
 			}
 			if (bCanSilver)
 			{
@@ -11606,11 +11606,11 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 				}
 				if (eFort != NO_IMPROVEMENT)
 				{
-					iImprovements += GetPlayer()->getImprovementCount(eLandmark);
+					iImprovements += GetPlayer()->getImprovementCount(eFort);
 				}
 				if (eCitadel != NO_IMPROVEMENT)
 				{
-					iImprovements += GetPlayer()->getImprovementCount(eLandmark);
+					iImprovements += GetPlayer()->getImprovementCount(eCitadel);
 				}
 				iExtra += (5 * iPercentofWinning * iImprovements) / 100;
 			}
@@ -11618,7 +11618,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 			{
 				iExtra += 100;
 				int iOurMilitaryMight = GetPlayer()->GetMilitarySeaMight();
-				int iHighestMilitaryMight = 0;
+				int iHighestMilitaryMight = 1;
 				for (int i = 0; i < MAX_MAJOR_CIVS; i++)
 				{
 					PlayerTypes e = (PlayerTypes)i;
@@ -11639,7 +11639,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 						}
 					}
 				}
-				int iMilitaryMightPercent = (iOurMilitaryMight * 100) / iHighestMilitaryMight;
+				int iMilitaryMightPercent = (iOurMilitaryMight * 100) / max(1,iHighestMilitaryMight);
 				iExtra += iMilitaryMightPercent * 10;
 			}
 			if (bCanBronze)
@@ -11895,9 +11895,9 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 		// What is the ratio of our current maintenance costs to our gross GPT?
 		int iUnitMaintenance = GetPlayer()->GetTreasury()->GetExpensePerTurnUnitMaintenance();
 		int iGPT = GetPlayer()->GetTreasury()->CalculateGrossGold();
-		int iPercent = (iUnitMaintenance * 100) / iGPT;
+		int iPercent = (iUnitMaintenance * 100) / max(1,iGPT);
 
-		iExtra -= (iPercent * iFactor) / 2;
+		iExtra -= (max(0, iPercent - 10) * iFactor) / 2;
 
 		iScore += iExtra;
 	}
@@ -12380,6 +12380,11 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 				{
 					iExtra += 15 * max(0, GetPlayer()->ScoreDifferencePercent(1) - 40); // was 10..30, gonna be 0..50
 				}
+				// Can't have both Science and arts funding
+				if (GetPlayer()->AidRankGeneric(2) != NO_PLAYER)
+				{
+					iExtra -= 15 * max(0, GetPlayer()->ScoreDifferencePercent(2) - 40); // was 10..30, gonna be 0..50
+				}
 #else
 			if (GetPlayer()->AidRank() != NO_PLAYER)
 			{
@@ -12401,6 +12406,11 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 				if (GetPlayer()->AidRankGeneric(2) != NO_PLAYER)
 				{ 
 					iExtra += 15 * max (0, GetPlayer()->ScoreDifferencePercent(2) - 40); // was 10..30, gonna be 0..50
+				}
+				// Can't have both Science and arts funding
+				if (GetPlayer()->AidRankGeneric(1) != NO_PLAYER)
+				{
+					iExtra -= 15 * max(0, GetPlayer()->ScoreDifferencePercent(1) - 40); // was 10..30, gonna be 0..50
 				}
 #else
 				if (GetPlayer()->AidRank() != NO_PLAYER)
@@ -12484,7 +12494,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 				if (eAlliedPlayer != ePlayer)
 				{
 					int iAllyInfluence = GET_PLAYER(eTargetCityState).GetMinorCivAI()->GetEffectiveFriendshipWithMajor(eAlliedPlayer);
-					iAllyDesire *= (iInfluence * 100) / iAllyInfluence;
+					iAllyDesire *= (iInfluence * 100) / max(1, iAllyInfluence);
 					iAllyDesire /= 100;
 				}
 			}
@@ -12606,7 +12616,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 				}
 			}
 			// Gives a percent we are above or below global mean techs
-			int iTechPercent = ((iOurTechs * iTeams * 100) / iTotalTechs) - 100;
+			int iTechPercent = ((iOurTechs * iTeams * 100) / max(1,iTotalTechs)) - 100;
 			if (iTechPercent > 0)
 			{
 				iExtra -= iTechPercent * 400;
