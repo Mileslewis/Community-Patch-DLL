@@ -11565,7 +11565,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 		{
 			if (bCanGold)
 			{
-				int iOurSeaMight = GetPlayer()->GetMilitarySeaMight();
+				int iOurSeaMight = GetPlayer()->GetMilitaryMight();
 				int iHighestSeaMight = 1;
 				for (int i = 0; i < MAX_MAJOR_CIVS; i++)
 				{
@@ -11573,7 +11573,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 					if (GET_PLAYER(e).isAlive() && !GET_PLAYER(e).isMinorCiv())
 					{
 						iAliveCivs++;
-						int iSeaMight = GET_PLAYER(e).GetMilitarySeaMight();
+						int iSeaMight = GET_PLAYER(e).GetMilitaryMight();
 						if (iSeaMight > iHighestSeaMight)
 						{
 							iHighestSeaMight = iSeaMight;
@@ -11581,7 +11581,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 					}
 				}
 				int iSeaMightPercent = (iOurSeaMight * 100) / max(1, iHighestSeaMight);
-				iExtra += (iPercentofWinning * iSeaMightPercent) / 6;
+				iExtra += (iPercentofWinning * iSeaMightPercent) / 8;
 				iExtra += iPercentofWinning * 3;
 			}
 			if (bCanSilver)
@@ -11618,7 +11618,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 			if (bCanSilver)
 			{
 				iExtra += 100;
-				int iOurMilitaryMight = GetPlayer()->GetMilitarySeaMight();
+				int iOurMilitaryMight = GetPlayer()->GetMilitaryMight();
 				int iHighestMilitaryMight = 1;
 				for (int i = 0; i < MAX_MAJOR_CIVS; i++)
 				{
@@ -11626,7 +11626,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 					if (GET_PLAYER(e).isAlive() && !GET_PLAYER(e).isMinorCiv())
 					{
 						iAliveCivs++;
-						int iMilitaryMight = GET_PLAYER(e).GetMilitarySeaMight();
+						int iMilitaryMight = GET_PLAYER(e).GetMilitaryMight();
 						if (iMilitaryMight > iHighestMilitaryMight)
 						{
 							iHighestMilitaryMight = iMilitaryMight;
