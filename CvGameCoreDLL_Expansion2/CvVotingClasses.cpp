@@ -1,5 +1,5 @@
 /*	-------------------------------------------------------------------------------------------------------
-	Â© 1991-2012 Take-Two Interactive Software and its subsidiaries.  Developed by Firaxis Games.  
+	© 1991-2012 Take-Two Interactive Software and its subsidiaries.  Developed by Firaxis Games.  
 	Sid Meier's Civilization V, Civ, Civilization, 2K Games, Firaxis Games, Take-Two Interactive Software 
 	and their respective logos are all trademarks of Take-Two interactive Software, Inc.  
 	All other marks and trademarks are the property of their respective owners.  
@@ -276,7 +276,7 @@ CvResolutionEffects::CvResolutionEffects(void)
 #endif
 }
 
-bool CvResolutionEffects::SetType(ResolutionTypes eType)
+CvResolutionEffects::CvResolutionEffects(ResolutionTypes eType)
 {
 	CvResolutionEntry* pInfo = GC.getResolutionInfo(eType);	
 	CvAssertMsg(pInfo, "Resolution info is null when instantiating ResolutionEffects. Please send Anton your save file and version.");
@@ -324,9 +324,7 @@ bool CvResolutionEffects::SetType(ResolutionTypes eType)
 		iVassalMaintenanceGoldPercent		= pInfo->GetVassalMaintenanceGoldPercent();
 		bEndAllCurrentVassals				= pInfo->IsEndAllCurrentVassals();
 #endif
-		return true;
 	}
-	return false;
 }
 
 CvResolutionEffects::~CvResolutionEffects(void)
@@ -807,7 +805,7 @@ CvVoterDecision::~CvVoterDecision(void)
 
 int CvVoterDecision::GetDecision()
 {
-	CvWeightedVector<int> vChoices;
+	CvWeightedVector<int, 64, true> vChoices;
 	for (PlayerVoteList::iterator it = m_vVotes.begin(); it != m_vVotes.end(); it++)
 	{
 		bool bFirst = true;
@@ -892,7 +890,7 @@ bool CvVoterDecision::IsTie()
 
 std::vector<int> CvVoterDecision::GetTopVotedChoices(int iNumTopChoices)
 {
-	CvWeightedVector<int> vChoices;
+	CvWeightedVector<int, 64, true> vChoices;
 	for (PlayerVoteList::iterator it = m_vVotes.begin(); it != m_vVotes.end(); it++)
 	{
 		bool bFirst = true;
@@ -1150,7 +1148,7 @@ CvResolution::CvResolution(int iID, ResolutionTypes eType, LeagueTypes eLeague)
 	m_iID = iID;
 	m_eType = eType;
 	m_eLeague = eLeague;
-	m_sEffects.SetType(m_eType);
+	m_sEffects = CvResolutionEffects(m_eType);
 }
 
 CvResolution::~CvResolution(void)
@@ -5656,18 +5654,6 @@ int CvLeague::GetUnitMaintenanceMod()
 	}
 	return iMod;
 }
-bool CvLeague::IsCityStateEmbargo()
-{
-	for (ActiveResolutionList::iterator it = m_vActiveResolutions.begin(); it != m_vActiveResolutions.end(); it++)
-	{
-		if (it->GetEffects()->bEmbargoCityStates)
-		{
-			return true;
-		}
-	}
-
-	return false;
-}
 bool CvLeague::IsIdeologyEmbargoed(PlayerTypes eTrader, PlayerTypes eRecipient)
 {
 	CvAssertMsg(eTrader >= 0 && eTrader < MAX_CIV_PLAYERS, "Invalid index for eTrader. Please send Anton your save file and version.");
@@ -6343,7 +6329,7 @@ CvString CvLeague::GetProjectProgressDetails(LeagueProjectTypes eProject, Player
 	}
 
 	// Total cost
-	if (eObserver != NO_PLAYER && IsProjectActive(eProject) && GetProjectCost(eProject)>0)
+	if (eObserver != NO_PLAYER && IsProjectActive(eProject))
 	{
 		int iPercentCompleted = (int) (((float)GetProjectProgress(eProject) / (float)GetProjectCost(eProject)) * 100);
 		iPercentCompleted = MIN(100, iPercentCompleted);
@@ -7479,7 +7465,7 @@ void CvLeague::ClearProposalPrivileges()
 
 void CvLeague::AssignProposalPrivileges()
 {
-	CvWeightedVector<Member*> vpPossibleProposers;
+	CvWeightedVector<Member*, MAX_CIV_PLAYERS, false> vpPossibleProposers;
 	for (MemberList::iterator it = m_vMembers.begin(); it != m_vMembers.end(); it++)
 	{
 		if (CanEverPropose(it->ePlayer))
@@ -8210,7 +8196,7 @@ void CvLeague::DoProjectReward(PlayerTypes ePlayer, LeagueProjectTypes eLeaguePr
 		if (pRewardInfo->GetBaseBeakersTurnsToCount() > 0)
 		{
 			int iPreviousTurnsToCount = pRewardInfo->GetBaseBeakersTurnsToCount();
-			int iBeakersBonus = GET_PLAYER(ePlayer).getYieldPerTurnHistory(YIELD_SCIENCE, iPreviousTurnsToCount);
+			int iBeakersBonus = GET_PLAYER(ePlayer).GetScienceYieldFromPreviousTurns(GC.getGame().getGameTurn(), iPreviousTurnsToCount);
 			TechTypes eCurrentTech = GET_PLAYER(ePlayer).GetPlayerTechs()->GetCurrentResearch();
 			if(eCurrentTech == NO_TECH)
 			{
@@ -9388,22 +9374,6 @@ int CvGameLeagues::GetUnitMaintenanceMod(PlayerTypes ePlayer)
 		}
 	}
 	return iValue;
-}
-
-bool CvGameLeagues::IsCityStateEmbargo(PlayerTypes ePlayer)
-{
-	for (LeagueList::iterator it = m_vActiveLeagues.begin(); it != m_vActiveLeagues.end(); ++it)
-	{
-		if (it->IsMember(ePlayer))
-		{
-			if (it->IsCityStateEmbargo())
-			{
-				return true;
-			}
-		}
-	}
-
-	return false;
 }
 
 bool CvGameLeagues::IsIdeologyEmbargoed(PlayerTypes eTrader, PlayerTypes eRecipient)
@@ -11089,6 +11059,7 @@ void CvLeagueAI::AllocateVotes(CvLeague* pLeague)
 	{
 		vConsiderations.SortItems();
 
+
 		// Even if we don't like anything, make sure we have something to choose from
 		if (vConsiderations.GetTotalWeight() <= 0)
 		{
@@ -11098,7 +11069,7 @@ void CvLeagueAI::AllocateVotes(CvLeague* pLeague)
 			}
 		}
 
-		CvWeightedVector<VoteConsideration> vVotesAllocated;
+		CvWeightedVector<VoteConsideration, 4, false> vVotesAllocated;
 		for (int i = 0; i < iVotes; i++)
 		{
 			vConsiderations.SortItems();
@@ -11113,7 +11084,7 @@ void CvLeagueAI::AllocateVotes(CvLeague* pLeague)
 			}
 
 			//count how often we voted for one thing already
-			//and reduce the weight for what we chose by 15%, so we introduce more variety into our options.
+			//and reduce the weight for what we chose by 10%, so we introduce more variety into our options.
 			for (int i = 0; i < vConsiderations.size(); i++)
 			{
 				VoteConsideration vc = vConsiderations.GetElement(i);
@@ -11467,7 +11438,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 				
 			}
 		}
-		int iProductionMightPercent = (iOurProductionMight * 100) / max(1,iHighestProduction);
+		int iProductionMightPercent = (iOurProductionMight * 100) / max(1, iHighestProduction);
 		bool bCanGold = iProductionMightPercent >= 80;
 		if (bCanGold)
 		{
@@ -11574,7 +11545,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 				}
 			}
 			// Gives a percent we are above or below global mean techs
-			int iTechPercent = ((iOurTechs * iTeams * 100) / max(1,iTotalTechs)) - 100;
+			int iTechPercent = ((iOurTechs * iTeams * 100) / max(1, iTotalTechs)) - 100;
 
 			if (bCanGold)
 			{
@@ -11594,23 +11565,23 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 		{
 			if (bCanGold)
 			{
-				int iOurSeaMight = GetPlayer()->GetMilitaryMight();
-				int iHighestSeaMight = 0;
+				int iOurSeaMight = GetPlayer()->GetMilitarySeaMight();
+				int iHighestSeaMight = 1;
 				for (int i = 0; i < MAX_MAJOR_CIVS; i++)
 				{
 					PlayerTypes e = (PlayerTypes)i;
 					if (GET_PLAYER(e).isAlive() && !GET_PLAYER(e).isMinorCiv())
 					{
 						iAliveCivs++;
-						int iSeaMight = GET_PLAYER(e).GetMilitaryMight();
+						int iSeaMight = GET_PLAYER(e).GetMilitarySeaMight();
 						if (iSeaMight > iHighestSeaMight)
 						{
 							iHighestSeaMight = iSeaMight;
 						}
 					}
 				}
-				int iSeaMightPercent = (iOurSeaMight * 100) / max(1,iHighestSeaMight);
-				iExtra += (iPercentofWinning * iSeaMightPercent) / 8;
+				int iSeaMightPercent = (iOurSeaMight * 100) / max(1, iHighestSeaMight);
+				iExtra += (iPercentofWinning * iSeaMightPercent) / 6;
 				iExtra += iPercentofWinning * 3;
 			}
 			if (bCanSilver)
@@ -11647,15 +11618,15 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 			if (bCanSilver)
 			{
 				iExtra += 100;
-				int iOurMilitaryMight = GetPlayer()->GetMilitaryMight();
-				int iHighestMilitaryMight = 0;
+				int iOurMilitaryMight = GetPlayer()->GetMilitarySeaMight();
+				int iHighestMilitaryMight = 1;
 				for (int i = 0; i < MAX_MAJOR_CIVS; i++)
 				{
 					PlayerTypes e = (PlayerTypes)i;
 					if (GET_PLAYER(e).isAlive() && !GET_PLAYER(e).isMinorCiv())
 					{
 						iAliveCivs++;
-						int iMilitaryMight = GET_PLAYER(e).GetMilitaryMight();
+						int iMilitaryMight = GET_PLAYER(e).GetMilitarySeaMight();
 						if (iMilitaryMight > iHighestMilitaryMight)
 						{
 							iHighestMilitaryMight = iMilitaryMight;
@@ -11936,7 +11907,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 		// What is the ratio of our current maintenance costs to our gross GPT?
 		int iUnitMaintenance = GetPlayer()->GetTreasury()->GetExpensePerTurnUnitMaintenance();
 		int iGPT = GetPlayer()->GetTreasury()->CalculateGrossGold();
-		int iPercent = (iUnitMaintenance * 100) / max (1,iGPT);
+		int iPercent = (iUnitMaintenance * 100) / max(1,iGPT);
 
 		iExtra -= (max(0, iPercent - 10) * iFactor) / 2;
 
@@ -12439,7 +12410,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 				{
 					iExtra += 15 * max(0, GetPlayer()->ScoreDifferencePercent(1) - 40); 
 				}
-				// can't have arts and science funding
+				// Can't have both Science and arts funding
 				if (GetPlayer()->AidRankGeneric(2) != NO_PLAYER)
 				{
 					iExtra -= 5 * max(0, GetPlayer()->ScoreDifferencePercent(2) - 40);
@@ -12466,7 +12437,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 				{ 
 					iExtra += 15 * max (0, GetPlayer()->ScoreDifferencePercent(2) - 40); 
 				}
-				// can't have arts and science funding
+				// Can't have both Science and arts funding
 				if (GetPlayer()->AidRankGeneric(1) != NO_PLAYER)
 				{
 					iExtra -= 5 * max(0, GetPlayer()->ScoreDifferencePercent(1) - 40);
@@ -12553,7 +12524,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 				if (eAlliedPlayer != NO_PLAYER && eAlliedPlayer != ePlayer)
 				{
 					int iAllyInfluence = GET_PLAYER(eTargetCityState).GetMinorCivAI()->GetEffectiveFriendshipWithMajor(eAlliedPlayer);
-					iAllyDesire *= (iInfluence * 100) / max(1,iAllyInfluence);
+					iAllyDesire *= (iInfluence * 100) / max(1, iAllyInfluence);
 					iAllyDesire /= 100;
 				}
 			}
@@ -13341,14 +13312,21 @@ void CvLeagueAI::LogProposalConsidered(ProposalConsideration* pProposal, int iCh
 	if (vInactive.empty())
 		return;
 
-	if (pProposal == NULL)
-		return;
+	ResolutionTypes eResolution = NO_RESOLUTION;
 
-	ResolutionTypes eResolution = pProposal->bEnact ? vInactive[pProposal->iIndex] : vActive[pProposal->iIndex].GetType();
-	if (GC.getResolutionInfo(eResolution) == NULL)
-		return;
+	if (pProposal->bEnact)
+	{
+		eResolution = vInactive[pProposal->iIndex];
+	}
+	else
+	{
+		eResolution = vActive[pProposal->iIndex].GetType();
+	}
 
+	CvAssert(pProposal != NULL);
+	if (!(pProposal != NULL)) return;
 	CvString sMessage = "";
+
 	sMessage += ",";
 	sMessage += GetPlayer()->getCivilizationShortDescription();
 	sMessage += ",- - -";
