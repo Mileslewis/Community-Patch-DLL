@@ -753,7 +753,6 @@ protected:
 	static int lGetCityEventChoiceCooldown(lua_State* L);
 	static int lSetCityEventChoiceCooldown(lua_State* L);
 	static int lIsCityEventChoiceValid(lua_State* L);
-	static int lIsCityEventChoiceValidEspionage(lua_State* L);
 #endif
 
 #if defined(MOD_BALANCE_CORE_JFD)

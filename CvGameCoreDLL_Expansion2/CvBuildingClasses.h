@@ -236,6 +236,25 @@ public:
 	int GetNoUnhappfromXSpecialists() const;
 	int GetNoUnhappfromXSpecialistsGlobal() const;
 #endif
+#if defined(MOD_BALANCE_CORE_SPIES)
+	int GetCannotFailSpies() const;
+	int GetAdvancedActionGold() const;
+	int GetAdvancedActionScience() const;
+	int GetAdvancedActionUnrest() const;
+	int GetAdvancedActionRebellion() const;
+	int GetAdvancedActionGP() const;
+	int GetAdvancedActionUnit() const;
+	int GetAdvancedActionWonder() const;
+	int GetAdvancedActionBuilding() const;
+	int GetBlockBuildingDestruction() const;
+	int GetBlockWWDestruction() const;
+	int GetBlockUDestruction() const;
+	int GetBlockGPDestruction() const;
+	int GetBlockRebellion() const;
+	int GetBlockUnrest() const;
+	int GetBlockScience() const;
+	int GetBlockGold() const;
+#endif
 #if defined(MOD_DIPLOMACY_CIV4_FEATURES)
 	bool IsVassalLevyEra() const;
 #endif
@@ -564,7 +583,6 @@ public:
 	bool IsResourcePlotsToPlace() const;
 	int GetYieldPerFriend(int i) const;
 	int GetYieldPerAlly(int i) const;
-	int GetYieldChangeWorldWonder(int i) const;
 #endif
 	int GetNumFreeUnits(int i) const;
 #if defined(MOD_BALANCE_CORE_BUILDING_INSTANT_YIELD)
@@ -844,6 +862,25 @@ private:
 	int m_iEventRequiredActive;
 	int m_iCityEventRequiredActive;
 #endif
+#if defined(MOD_BALANCE_CORE_SPIES)
+	int m_iCannotFailSpies;
+	int m_iAdvancedActionGold;
+	int m_iAdvancedActionScience;
+	int m_iAdvancedActionUnrest;
+	int m_iAdvancedActionRebellion;
+	int m_iAdvancedActionGP;
+	int m_iAdvancedActionUnit;
+	int m_iAdvancedActionWonder;
+	int m_iAdvancedActionBuilding;
+	int m_iBlockBuildingDestruction;
+	int m_iBlockWWDestruction;
+	int m_iBlockUDestruction;
+	int m_iBlockGPDestruction;
+	int m_iBlockRebellion;
+	int m_iBlockUnrest;
+	int m_iBlockScience;
+	int m_iBlockGold;
+#endif
 #if defined(MOD_DIPLOMACY_CIV4_FEATURES)
 	bool m_bVassalLevyEra;
 #endif
@@ -996,7 +1033,6 @@ private:
 	std::map<int, std::map<int, int>> m_ppiResourcePlotsToPlace;
 	int* m_piYieldPerFriend;
 	int* m_piYieldPerAlly;
-	int* m_piYieldChangeWorldWonder;
 #endif
 	int* m_piNumFreeUnits;
 

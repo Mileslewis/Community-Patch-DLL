@@ -55,7 +55,6 @@ public:
 	int GetHappinessNeedModifier(int i) const;
 	int GetHappiness() const;
 	int GetEmpireMod() const;
-	int GetEspionageMod() const;
 #endif
 
 	const char* GetMovieArtDef() const;
@@ -97,7 +96,6 @@ protected:
 	int* m_piHappinessNeedModifier;
 	int m_iHappiness;
 	int m_iEmpireMod;
-	int m_iEspionageMod;
 #endif
 
 	CvString m_strCreateSound;
