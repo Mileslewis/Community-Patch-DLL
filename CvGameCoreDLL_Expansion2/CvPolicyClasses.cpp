@@ -4987,6 +4987,14 @@ int CvPlayerPolicies::GetNextPolicyCost()
 	iCost /= iDivisor;
 	iCost *= iDivisor;
 
+	if (!GetPlayer()->isHuman())
+	{
+		iCost *= GC.getGame().getHandicapInfo().getAIGrowthPercent();
+		iCost /= 100;
+		iCost *= 100 + (GC.getGame().getHandicapInfo().getAIPerEraModifier() * GC.getGame().getCurrentEra());
+		iCost /= 100;
+	}
+
 	return iCost;
 }
 
